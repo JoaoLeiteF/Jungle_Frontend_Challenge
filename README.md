@@ -4,7 +4,7 @@ Solução do [desafio de frontend da Jungle Gaming](https://github.com/junglegam
 (enunciado copiado em [`docs/challenge/README.md`](docs/challenge/README.md)), implementada a partir do
 [Figma](https://www.figma.com/design/Ff0SksUi7UFtPWUO8kyNtw/Frontend-Challenge?node-id=0-1).
 
-- **Aplicação publicada:** _a definir no deploy (ver [Deploy](#deploy))_
+- **Aplicação publicada:** https://kurio-nft-marketplace-teal.vercel.app
 - **Decisões, contratos e limitações:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - **Design (SDD):** [`docs/superpowers/specs/2026-10-27-kurio-marketplace-design.md`](docs/superpowers/specs/2026-10-27-kurio-marketplace-design.md)
 - **Referência do Figma (tokens, frames, assets, comentários):** [`docs/figma/README.md`](docs/figma/README.md)

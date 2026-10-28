@@ -6,8 +6,8 @@ dist
 .env.*
 !.env.example
 # raw Figma material (processed copies live in public/ and docs/figma/)
-Export/
-Images/
+/Export/
+/Images/
 *.zip
 # test & audit outputs
 test-results/
