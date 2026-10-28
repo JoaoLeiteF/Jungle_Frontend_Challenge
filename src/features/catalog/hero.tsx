@@ -108,7 +108,7 @@ export function Hero() {
                 <Title {...rise(90)} className={cn(rise(90).className, 'mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:max-w-[600px] md:text-[43px] md:leading-[70px]')}>
                   {slide.title}
                 </Title>
-                <p {...rise(180)} className={cn(rise(180).className, 'mt-2 max-w-[520px] text-[11px] leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]')}>
+                <p {...rise(180)} className={cn(rise(180).className, 'mt-2 max-w-[520px] text-xs leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]')}>
                   {slide.text}
                 </p>
                 <div {...rise(270)}>
@@ -126,7 +126,7 @@ export function Hero() {
                     <NftImage
                       image={slide.image}
                       alt={`Arte em destaque: ${slide.title}`}
-                      priority={i === 0 || warm}
+                      priority={i === 0}
                       sizes="(min-width: 768px) 450px, 40vw"
                       className={cn('transition-transform duration-[1200ms] ease-out', active ? 'scale-100' : 'scale-105')}
                     />

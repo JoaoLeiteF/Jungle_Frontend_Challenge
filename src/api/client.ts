@@ -44,6 +44,13 @@ export function setUnauthorizedHandler(listener: UnauthorizedListener) {
   onUnauthorized = listener
 }
 
+/** Something other than the API answered. Announced so infrastructure (e.g. the dev mock worker) can recover. */
+export const API_UNREACHABLE_EVENT = 'kurio:api-unreachable'
+function unreachable() {
+  window.dispatchEvent(new Event(API_UNREACHABLE_EVENT))
+  return new ApiError(0, 'NETWORK', 'Sem conexão com o servidor.')
+}
+
 http.interceptors.response.use(undefined, (error: unknown) => {
   if (axios.isCancel(error)) return Promise.reject(error)
   if (!(error instanceof AxiosError)) return Promise.reject(error)
@@ -54,7 +61,7 @@ http.interceptors.response.use(undefined, (error: unknown) => {
   const body = error.response.data as Partial<ApiErrorBody> | undefined
   const status = error.response.status
   // Not our API answering (a proxy page, a bare 404): treat it as unreachable so queries retry.
-  if (!body?.error) return Promise.reject(new ApiError(0, 'NETWORK', 'Sem conexão com o servidor.'))
+  if (!body?.error) return Promise.reject(unreachable())
   const apiError = new ApiError(status, body.error.code, body.error.message, body.error.fields, body.error.details)
   if (status === 401 && storage.getToken()) onUnauthorized(body.error.code)
   return Promise.reject(apiError)
@@ -63,7 +70,7 @@ http.interceptors.response.use(undefined, (error: unknown) => {
 /** Every response is parsed against its contract: a mismatch is a bug, surfaced loudly. */
 export async function request<S extends z.ZodType>(schema: S, config: AxiosRequestConfig): Promise<z.infer<S>> {
   const { data, headers } = await http.request(config)
-  if (!String(headers['content-type'] ?? '').includes('json')) throw new ApiError(0, 'NETWORK', 'Sem conexão com o servidor.')
+  if (!String(headers['content-type'] ?? '').includes('json')) throw unreachable()
   return schema.parse(data)
 }
 

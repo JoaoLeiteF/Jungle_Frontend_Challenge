@@ -361,7 +361,7 @@ export function HomePage() {
       <div>
         <div className="mt-5 flex items-center justify-between md:hidden">
           <Wordmark animated className="text-xl" />
-          <span className="text-[11px] tracking-[0.08em] text-sand">Marketplace de NFTs</span>
+          <span className="text-xs tracking-[0.08em] text-sand">Marketplace de NFTs</span>
         </div>
         <Hero />
       </div>

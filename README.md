@@ -139,7 +139,7 @@ resultado mobile em [`lighthouse/ANALYSIS.md`](lighthouse/ANALYSIS.md).
 
 | Categoria (mediana) | Mobile início / detalhe | Desktop início / detalhe |
 | --- | ---: | ---: |
-| Performance | 86 / 88 | 99 / 99 |
+| Performance | 84 / 87 | 99 / 99 |
 | Accessibility | 100 / 100 | 100 / 100 |
 | Best Practices | 100 / 100 | 100 / 100 |
 | SEO | 100 / 100 | 100 / 100 |

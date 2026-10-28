@@ -16,13 +16,14 @@ HTML + JSON): [`reports/mobile`](reports/mobile) e [`reports/desktop`](reports/d
 
 | Categoria | Meta | Mobile (início / detalhe) | Desktop (início / detalhe) |
 | --- | ---: | ---: | ---: |
-| Performance | ≥ 90 | **86 / 88** | 99 / 99 |
+| Performance | ≥ 90 | **84 / 87** | 99 / 99 |
 | Accessibility | ≥ 95 | 100 / 100 | 100 / 100 |
 | Best Practices | ≥ 95 | 100 / 100 | 100 / 100 |
 | SEO | ≥ 90 | 100 / 100 | 100 / 100 |
 
-CLS ≈ 0 e TBT ≤ 150 ms em todos os perfis. O único item abaixo da meta é **Performance mobile** (86/88), por LCP
-≈ 3,5–3,6 s.
+CLS ≈ 0 em todos os perfis; TBT ≤ 211 ms no mobile e ≈ 0 no desktop. O único item abaixo da meta é **Performance
+mobile** (84/87), por LCP ≈ 3,6–3,9 s. FCP mobile ≈ 1,1–1,3 s. Entre execuções a mesma página varia ±5 pontos nesta
+máquina; por isso a mediana de 3.
 
 ## Por que o mobile fica abaixo de 90
 
@@ -37,6 +38,15 @@ renderização ≈ 1,1 s.
    que só existe depois da resposta da API simulada (latência padrão de 250 ms).
 3. **TTFB do `vite preview`** (≈ 0,5 s simulado) — servidor de desenvolvimento local; no CDN da Vercel é menor.
 
+## Lighthouse pelo DevTools do navegador
+
+Rodar pelo painel Lighthouse do DevTools pode terminar em `NO_FCP` ("The page did not paint any content"). Não é a
+página: com o DevTools desacoplado na frente da janela, o navegador deixa de pintar a aba coberta, e o próprio erro pede
+para manter a janela em primeiro plano. O aviso de IndexedDB indica dados de visitas anteriores na mesma origem. Para
+medir pelo navegador: DevTools acoplado, aba visível, janela anônima. O PageSpeed Insights e o `npm run audit:lighthouse`
+não têm esse problema. Desde o shell estático do `index.html`, algo sempre pinta antes do JS — o FCP não depende mais do
+bundle nem do service worker.
+
 ## O que foi feito (com efeito medido)
 
 | Mudança | Efeito |
@@ -49,9 +59,13 @@ renderização ≈ 1,1 s.
 | WebP 320/480/640/1254 com `srcset`/`sizes`, primeira fileira `eager` + `fetchpriority=high`, preload da arte do hero | menos bytes de imagem no mobile |
 | Fonte Roboto Mono auto-hospedada (subset latin), `font-display: swap`; preload removido após medir (competia com o JS) | |
 | Rótulo acessível do destaque contém o texto visível; bolinhas do carrossel com alvo de 24 px | Accessibility 97 → 100 |
+| Shell estático no `index.html` (marca + barra) pintado antes do JS | FCP mobile ≈ 1,9 s (execuções avulsas) → 1,1–1,3 s; a primeira pintura não espera o bundle nem o worker |
+| Wrapper do fade de rota com `flow-root` (a margem do skeleton colapsava através dele) | CLS do detalhe 0,076 → 0 |
+| Juntas: artes dos slides 2–3 sem `fetchpriority=high` (competiam com a imagem do LCP); verificação do worker do MSW só quando a API responde algo que não é a API (antes: a cada 2 s); texto do destaque mobile em 12 px | mobile início: TBT 373 → 273 ms, LCP 4,33 → 4,14 s, Best Practices 96 → 100 (`font-size`) |
+| Painel de cenários carregado só com a página ociosa (após 2,5 s) | mobile início: TBT 273 → 211 ms, LCP 4,14 → 3,94 s |
 
 ## Próximos passos (se o mock pudesse sair do caminho crítico)
 
-- Renderizar o shell (header, hero) antes do MSW e adiar só as requisições — exige enfileirar chamadas até o worker
-  ativar; ganho estimado ~0,5 s no LCP.
+- Renderizar o app real (header, hero) antes do MSW e adiar só as requisições — hoje só um shell estático pinta antes;
+  exige enfileirar chamadas até o worker ativar; ganho estimado ~0,5 s no LCP.
 - `zod/mini` no lugar de `zod` (≈ 20 KB gzip a menos) — troca de API em todos os contratos.

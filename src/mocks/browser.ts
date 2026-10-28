@@ -3,6 +3,7 @@ import { db, loadDb, resetDb } from './db'
 import { handlers, resumePendingOrders, touchNft } from './handlers'
 import { outage, peerCount, realtimeHandler, replayLast, replayStale } from './realtime'
 import { initScenario, scenario, setScenario, type ScenarioName } from './scenarios'
+import { API_UNREACHABLE_EVENT } from '@/api/client'
 import { addEth } from '@/lib/eth'
 
 /** Test/demo control surface. Every action mutates the simulated backend, never the UI. */
@@ -45,12 +46,12 @@ declare global {
 }
 
 const HEALTH_URL = `${import.meta.env.VITE_API_URL ?? '/api'}/__mock/health`
-const HEALTH_EVERY_MS = 2000
 
 /**
  * Browsers stop idle service workers. MSW's worker keeps its activated clients in memory only, so
  * after a restart it silently passes every request through to the network (on Vercel that is the
- * SPA's index.html). Probe a mocked endpoint and redo the activation handshake when it stops answering.
+ * SPA's index.html). When the API client reports a non-API answer (or the tab comes back), probe a mocked
+ * endpoint and redo the activation handshake if it no longer answers.
  */
 function keepMocksAlive(worker: ReturnType<typeof setupWorker>, options: Parameters<ReturnType<typeof setupWorker>['start']>[0]) {
   let healing = false
@@ -79,7 +80,7 @@ function keepMocksAlive(worker: ReturnType<typeof setupWorker>, options: Paramet
   window.addEventListener('unhandledrejection', (e) => {
     if (String((e.reason as Error | undefined)?.message ?? e.reason).startsWith('Failed to update a ServiceWorker')) e.preventDefault()
   })
-  setInterval(check, HEALTH_EVERY_MS)
+  window.addEventListener(API_UNREACHABLE_EVENT, check)
   document.addEventListener('visibilitychange', check)
   window.addEventListener('focus', check)
 }

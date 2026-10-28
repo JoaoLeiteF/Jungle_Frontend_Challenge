@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { cn } from '@/lib/utils'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { Footer } from '@/components/footer'
@@ -10,6 +11,23 @@ import { useSession } from './session'
 
 // Demo tooling: only fetched when the simulated backend is on.
 const MockPanel = lazy(() => import('@/devtools/mock-panel').then((m) => ({ default: m.MockPanel })))
+
+/** The panel is demo tooling: it waits for an idle main thread so it never competes with the first paint. */
+function DeferredMockPanel() {
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    const show = () => setReady(true)
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1))
+    const t = window.setTimeout(() => idle(show), 2500)
+    return () => window.clearTimeout(t)
+  }, [])
+  if (!ready) return null
+  return (
+    <Suspense fallback={null}>
+      <MockPanel />
+    </Suspense>
+  )
+}
 
 const PRIVATE = ['/checkout', '/orders', '/profile']
 
@@ -41,7 +59,8 @@ export function RootLayout() {
         <Header />
       </div>
       <main id="conteudo" tabIndex={-1} className="mx-auto flow-root min-h-[100dvh] w-full max-w-[1200px] px-4 pb-24 outline-none md:px-6 md:pb-0 xl:px-0">
-        <div key={section} className={navigated ? 'animate-in fade-in duration-300 ease-out' : undefined}>
+        {/* flow-root: a page's top margin must not collapse through this wrapper (it would shift as a whole) */}
+        <div key={section} className={cn('flow-root', navigated && 'animate-in fade-in duration-300 ease-out')}>
           <Outlet />
         </div>
       </main>
@@ -52,11 +71,7 @@ export function RootLayout() {
       <Toaster position="bottom-right" closeButton richColors={false} />
       <RealtimeBridge />
       <SessionWatcher />
-      {import.meta.env.VITE_ENABLE_MOCKS !== 'false' && (
-        <Suspense fallback={null}>
-          <MockPanel />
-        </Suspense>
-      )}
+      {import.meta.env.VITE_ENABLE_MOCKS !== 'false' && <DeferredMockPanel />}
     </>
   )
 }
