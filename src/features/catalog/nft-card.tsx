@@ -20,6 +20,7 @@ export function FavoriteButton({ nft, className, withLabel }: { nft: Pick<Nft, '
     <button
       type="button"
       aria-pressed={on}
+      disabled={s.status === 'loading' || toggle.isPending}
       aria-label={withLabel ? undefined : on ? `Remover ${nft.name} dos favoritos` : `Favoritar ${nft.name}`}
       onClick={() => {
         if (s.status !== 'authenticated') return navigate({ to: '/login', search: { redirect: `/nft/${nft.id}` } })

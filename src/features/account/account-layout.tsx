@@ -20,7 +20,7 @@ export function AccountLayout() {
     <div className="mt-6 grid gap-6 md:grid-cols-[310px_1fr] md:gap-7">
       <nav aria-label="Minha conta" className="h-fit bg-surface-card py-3">
         <p className="px-2.5 pb-2 text-lg font-bold">Meu perfil</p>
-        <ul className="flex gap-1 overflow-x-auto md:flex-col md:gap-0">
+        <ul className="flex flex-wrap md:flex-col">
           {ITEMS.map(({ label, to, icon: I, ...rest }) => {
             const active = pathname === to
             return (
@@ -29,7 +29,7 @@ export function AccountLayout() {
                   to={to}
                   search={'search' in rest ? rest.search : undefined}
                   aria-current={active ? 'page' : undefined}
-                  className={cn('flex items-center gap-3 border-l-[6px] px-4 py-3 text-sm whitespace-nowrap text-highlight hover:bg-surface-raised', active ? 'border-brand' : 'border-transparent')}
+                  className={cn('flex items-center gap-3 border-l-[6px] px-4 py-3 text-sm text-highlight hover:bg-surface-raised max-md:py-2', active ? 'border-brand' : 'border-transparent')}
                 >
                   <I className="size-4 text-sand" aria-hidden /> {label}
                 </Link>

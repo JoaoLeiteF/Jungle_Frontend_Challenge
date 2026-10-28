@@ -37,18 +37,18 @@ export function Hero() {
   const slide = SLIDES[index]!
   return (
     <section aria-roledescription="carrossel" aria-label="Destaques" className="relative mt-6 overflow-hidden rounded-[20px] bg-surface-card md:mt-0 md:overflow-visible md:rounded-none md:bg-transparent">
-      <div className="grid items-center gap-6 p-4 md:grid-cols-[1fr_minmax(0,450px)] md:gap-10 md:p-0 md:py-6" aria-live="polite">
+      <div className="grid grid-cols-[1fr_40%] items-center gap-3 p-4 md:grid-cols-[1fr_minmax(0,450px)] md:gap-10 md:p-0 md:py-6" aria-live="polite">
         <div className="md:pl-8">
           <p className="text-xs font-medium tracking-[0.1em] md:text-sm">{slide.eyebrow}</p>
-          <h1 className="mt-3 text-xl leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:text-[43px] md:leading-[70px]">{slide.title}</h1>
-          <p className="mt-3 max-w-[520px] text-xs leading-5 text-sand md:text-sm md:leading-[26px]">{slide.text}</p>
-          <Button asChild className="mt-6 h-[31px] px-5 text-base md:mt-8 md:h-[31px]">
+          <h1 className="mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:text-[43px] md:leading-[70px]">{slide.title}</h1>
+          <p className="mt-2 max-w-[520px] text-[11px] leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]">{slide.text}</p>
+          <Button asChild className="mt-3 h-[31px] px-4 text-sm md:mt-8 md:px-5 md:text-base">
             <Link to="/" search={slide.search} hash="catalogo">
               EXPLORAR
             </Link>
           </Button>
         </div>
-        <div className="mx-auto w-[45%] max-w-[450px] md:w-full">
+        <div className="w-full max-w-[450px]">
           <NftImage image={slide.image} alt={`Arte em destaque: ${slide.title}`} priority={index === 0} sizes="(min-width: 768px) 450px, 40vw" className="rounded-[14px] md:rounded-hero" />
         </div>
       </div>

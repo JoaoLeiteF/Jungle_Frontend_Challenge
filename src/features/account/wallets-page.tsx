@@ -95,10 +95,11 @@ function WalletForm({ role, wallet, template, onDone }: { role: Role; wallet?: W
 
 export function WalletsPage() {
   const wallets = useWallets()
+  const me = useMe() // new-wallet defaults come from the profile
   const [addingSecondary, setAddingSecondary] = useState(false)
   const [copyPrimary, setCopyPrimary] = useState(false)
-  if (wallets.isError) return <ErrorState onRetry={() => wallets.refetch()} />
-  if (!wallets.data) return <Skeleton className="h-96" />
+  if (wallets.isError || me.isError) return <ErrorState onRetry={() => (wallets.refetch(), me.refetch())} />
+  if (!wallets.data || !me.data) return <Skeleton className="h-96" />
   const primary = wallets.data.find((w) => w.role === 'primary')
   const secondary = wallets.data.find((w) => w.role === 'secondary')
 
