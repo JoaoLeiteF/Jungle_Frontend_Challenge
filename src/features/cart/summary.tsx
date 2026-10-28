@@ -17,7 +17,7 @@ export function CouponField({ compact }: { compact?: boolean }) {
 
   if (applied)
     return (
-      <div className="flex items-center justify-between rounded-[4px] border border-line-soft px-3 py-2 text-sm" role="status">
+      <div className="flex items-center justify-between rounded-[4px] border border-brand/50 bg-brand/5 px-3 py-2 text-sm animate-in fade-in slide-in-from-top-1 duration-300" role="status">
         <span>
           Cupom <strong className="text-highlight">{applied}</strong> aplicado
         </span>
@@ -28,6 +28,7 @@ export function CouponField({ compact }: { compact?: boolean }) {
     )
   return (
     <form
+      className="animate-in fade-in duration-300"
       onSubmit={(e) => {
         e.preventDefault()
         if (code.trim()) coupon.mutate(code.trim(), { onSuccess: () => setCode('') })
@@ -55,7 +56,7 @@ export function CouponField({ compact }: { compact?: boolean }) {
         </button>
       </div>
       {error && (
-        <p id={`${id}-error`} role="alert" className="mt-2 text-xs text-danger">
+        <p id={`${id}-error`} role="alert" className="mt-2 text-xs text-danger animate-in fade-in slide-in-from-top-1 duration-200">
           {error}
         </p>
       )}
@@ -95,7 +96,9 @@ export function QuoteTotals({ quote, loading }: { quote?: Quote; loading?: boole
       </div>
       <div className="flex justify-between">
         <dt>{quote.coupon ? `Desconto (${quote.coupon.code} −${quote.coupon.percentOff}%)` : 'Desconto do lançamento'}</dt>
-        <dd>(-) {discount}</dd>
+        <dd key={discount} className="animate-in fade-in duration-500">
+          (-) {discount}
+        </dd>
       </div>
       <div className="flex flex-col">
         <div className="flex justify-between">
@@ -106,7 +109,7 @@ export function QuoteTotals({ quote, loading }: { quote?: Quote; loading?: boole
       </div>
       <div className="flex justify-between border-t border-line pt-4 text-lg font-bold">
         <dt>Total</dt>
-        <dd className="text-highlight" aria-live="polite">
+        <dd key={quote.totalEth} className="text-highlight animate-in fade-in duration-500" aria-live="polite">
           {formatEth(quote.totalEth)}
         </dd>
       </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Wordmark } from '@/components/wordmark'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { LogIn, LogOut, UserRound } from 'lucide-react'
+import { LogIn, LogOut, UserRound, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { session, useSession } from '@/app/session'
 import { useCart } from '@/features/cart/queries'
@@ -19,8 +19,8 @@ export function CartBadgeLink({ className }: { className?: string }) {
   const cart = useCart()
   const count = cart.data?.items.reduce((n, i) => n + i.quantity, 0) ?? 0
   return (
-    <Link to="/cart" className={cn('relative grid size-10 place-items-center rounded-md hover:bg-surface-raised', className)} aria-label={`Carrinho, ${count} ${count === 1 ? 'item' : 'itens'}`}>
-      <Icon name="shop" className="size-6 text-cream" />
+    <Link to="/cart" className={cn('group/cart relative grid size-10 place-items-center rounded-md transition-colors hover:bg-surface-raised', className)} aria-label={`Carrinho, ${count} ${count === 1 ? 'item' : 'itens'}`}>
+      <Icon name="cart" className="size-6 text-cream transition-transform duration-200 group-hover/cart:-translate-y-0.5" />
       {count > 0 && (
         <span aria-hidden className="absolute top-1 right-0.5 grid min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] leading-4 font-bold text-ink">
           {count > 99 ? '99+' : count}
@@ -32,17 +32,27 @@ export function CartBadgeLink({ className }: { className?: string }) {
 
 function SearchBox({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate()
+  const [leaving, setLeaving] = useState(false)
+  const close = () => {
+    setLeaving(true)
+    setTimeout(onDone, 160)
+  }
   return (
     <form
       role="search"
-      className="flex items-center gap-2"
+      className={cn(
+        'relative flex origin-right items-center',
+        leaving ? 'animate-out fade-out zoom-out-95 slide-out-to-right-2 duration-150' : 'animate-in fade-in zoom-in-95 slide-in-from-right-4 duration-300 ease-out',
+      )}
+      style={leaving ? { animationFillMode: 'forwards' } : undefined}
       onSubmit={(e) => {
         e.preventDefault()
         const q = String(new FormData(e.currentTarget).get('q') ?? '').trim()
         navigate({ to: '/', search: (prev) => ({ ...prev, q: q || undefined, page: undefined }), hash: 'catalogo' })
-        onDone()
+        close()
       }}
     >
+      <Icon name="search" className="pointer-events-none absolute left-3 size-4 text-sand" />
       <label htmlFor="header-search" className="sr-only">
         Buscar NFTs
       </label>
@@ -51,9 +61,12 @@ function SearchBox({ onDone }: { onDone: () => void }) {
         name="q"
         autoFocus
         placeholder="Buscar NFTs, coleções…"
-        onKeyDown={(e) => e.key === 'Escape' && onDone()}
-        className="h-9 w-56 rounded-md border border-line-soft bg-surface-card px-3 text-sm placeholder:text-sand-muted"
+        onKeyDown={(e) => e.key === 'Escape' && close()}
+        className="h-10 w-64 rounded-full border border-line-soft bg-surface-card pr-10 pl-9 text-sm transition-colors placeholder:text-sand-muted focus:border-brand"
       />
+      <button type="button" onClick={close} aria-label="Fechar busca" className="absolute right-1.5 grid size-7 place-items-center rounded-full text-sand transition-colors hover:bg-surface-raised hover:text-cream">
+        <X className="size-4" aria-hidden />
+      </button>
     </form>
   )
 }

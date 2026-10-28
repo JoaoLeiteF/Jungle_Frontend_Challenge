@@ -121,11 +121,11 @@ export function Hero() {
               aria-label={`${i + 1} de ${SLIDES.length}`}
               inert={!active}
               className={cn(
-                'grid w-full shrink-0 grid-cols-[1fr_40%] items-center gap-3 p-4 transition-opacity duration-700 md:grid-cols-[1fr_minmax(0,450px)] md:gap-10 md:p-0 md:py-6',
+                'grid w-full shrink-0 grid-cols-[1fr_40%] items-center gap-3 p-4 transition-opacity duration-700 md:grid-cols-[1fr_minmax(0,450px)] md:items-start md:gap-10 md:p-0 md:py-6',
                 active ? 'opacity-100' : 'opacity-0',
               )}
             >
-              <div className="md:pl-8">
+              <div className="md:pt-[54px] md:pl-8">
                 <p {...rise(0)}>
                   <span className="inline-flex items-center gap-2 text-xs font-medium tracking-[0.1em] md:text-sm">
                     <span aria-hidden className="h-px w-6 bg-brand max-md:hidden" />
@@ -139,9 +139,9 @@ export function Hero() {
                   {slide.text}
                 </p>
                 <div {...rise(270)}>
-                  <Button asChild className="group/cta mt-3 h-[31px] px-4 text-sm max-md:h-auto max-md:bg-transparent max-md:px-0 max-md:text-highlight max-md:hover:bg-transparent md:mt-8 md:h-10 md:px-6 md:text-base">
+                  <Button asChild className="cta group/cta mt-3 h-[31px] px-4 text-sm max-md:h-auto max-md:bg-transparent max-md:px-0 max-md:text-highlight max-md:hover:bg-transparent md:mt-8 md:h-10 md:px-6 md:text-base">
                     <Link to="/" search={slide.search} hash="catalogo">
-                      EXPLORAR <ArrowRight aria-hidden className="transition-transform duration-200 group-hover/cta:translate-x-1" />
+                      EXPLORAR <ArrowRight aria-hidden className={cn('transition-transform duration-200 group-hover/cta:translate-x-1', active && 'cta-nudge')} />
                     </Link>
                   </Button>
                 </div>
@@ -165,11 +165,11 @@ export function Hero() {
                     onClick={() => go(i + 1)}
                     aria-label={`Próximo destaque: ${SLIDES[(i + 1) % SLIDES.length]!.title}`}
                     className={cn(
-                      'absolute -bottom-3 -left-4 w-[46%] overflow-hidden rounded-[10px] ring-2 ring-surface-card shadow-[0_6px_14px_-6px_rgb(0_0_0/0.8)] transition-[transform,opacity] delay-300 duration-700 ease-out active:scale-95 md:-bottom-7 md:-left-12 md:w-[30%] md:rounded-[18px] md:ring-4 md:ring-ink md:shadow-[0_18px_36px_-14px_rgb(0_0_0/0.9)] md:[transform:translate3d(calc(var(--px,0)*10px),calc(var(--py,0)*10px),0)] md:hover:ring-brand/60',
+                      'absolute -bottom-3 -left-4 w-[46%] overflow-hidden rounded-[10px] ring-2 ring-surface-card shadow-[0_6px_14px_-6px_rgb(0_0_0/0.8)] transition-[transform,opacity] delay-300 duration-700 ease-out active:scale-95 md:hidden',
                       active ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
                     )}
                   >
-                    <NftImage image={SLIDES[(i + 1) % SLIDES.length]!.image} alt="" sizes="(min-width: 768px) 140px, 80px" />
+                    <NftImage image={SLIDES[(i + 1) % SLIDES.length]!.image} alt="" sizes="80px" />
                   </button>
                 )}
               </div>
@@ -434,9 +434,9 @@ function Promos() {
           <div className="flex min-w-0 flex-col items-end justify-center py-4 pr-4 text-right lg:pr-8">
             <h2 className="text-sm leading-[19px] font-bold md:text-lg md:leading-6">{p.title}</h2>
             <p className="mt-3 text-xs leading-[19px] text-sand md:text-sm md:leading-6">{p.text}</p>
-            <Button asChild size="sm" className="mt-3 h-[31px] px-4">
+            <Button asChild size="sm" className="cta group/cta mt-3 h-[31px] px-4">
               <Link to="/" search={p.search} hash="catalogo">
-                Explorar <ArrowRight aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5" />
+                Explorar <ArrowRight aria-hidden className="transition-transform duration-200 group-hover/cta:translate-x-1" />
               </Link>
             </Button>
           </div>

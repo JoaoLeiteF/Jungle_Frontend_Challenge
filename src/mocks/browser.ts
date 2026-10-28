@@ -68,10 +68,17 @@ function keepMocksAlive(worker: ReturnType<typeof setupWorker>, options: Paramet
     try {
       worker.stop()
       await worker.start(options)
+    } catch {
+      // the worker can still be restarting (its script fetch fails meanwhile): the next probe retries
     } finally {
       healing = false
     }
   }
+  // MSW's start() calls registration.update() without a catch; while the browser is still restarting the
+  // worker that update rejects. It is harmless (the next probe finishes the job), so don't let it surface.
+  window.addEventListener('unhandledrejection', (e) => {
+    if (String((e.reason as Error | undefined)?.message ?? e.reason).startsWith('Failed to update a ServiceWorker')) e.preventDefault()
+  })
   setInterval(check, HEALTH_EVERY_MS)
   document.addEventListener('visibilitychange', check)
   window.addEventListener('focus', check)

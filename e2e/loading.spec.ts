@@ -2,16 +2,19 @@ import { expect, mock, open, test } from './fixtures'
 
 test.describe('carregamento, falha e recuperação', () => {
   test('skeletons durante carregamento lento preservam o layout', async ({ page }) => {
+    // Time only moves when the test says so: a busy machine can't burn the 1.5 s latency before we look.
     await page.clock.install()
+    await page.clock.pauseAt(new Date(Date.now() + 1000))
     await page.goto('/?scenario=slow')
-    await page.waitForFunction(() => !!window.__kurioMock)
     const skeletons = page.getByRole('list', { name: 'Carregando NFTs' })
-    await expect(skeletons).toBeVisible()
+    await expect
+      .poll(async () => (await skeletons.isVisible()) || (await page.clock.runFor(100), false), { timeout: 20_000 })
+      .toBe(true)
     await expect(skeletons.getByRole('listitem')).toHaveCount(9)
     const box = await skeletons.boundingBox()
-    await page.clock.runFor(4000)
-    const grid = page.locator('main ul').filter({ has: page.locator('article') }).first()
-    await expect(grid.locator('article')).toHaveCount(9)
+    await page.clock.resume()
+    const grid = page.getByRole('region', { name: 'Catálogo' }).locator('ul').filter({ has: page.locator('article') }).first()
+    await expect(grid.locator('article')).toHaveCount(9, { timeout: 15_000 })
     const after = await grid.boundingBox()
     expect(Math.abs((after?.y ?? 0) - (box?.y ?? 0))).toBeLessThan(2) // no layout shift of the grid
   })

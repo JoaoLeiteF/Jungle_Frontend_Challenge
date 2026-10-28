@@ -20,7 +20,7 @@ export function ComingSoonPage() {
         <Button onClick={back}>
           <ArrowLeft aria-hidden /> Voltar
         </Button>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="cta">
           <Link to="/" hash="catalogo">
             Explorar o mercado
           </Link>

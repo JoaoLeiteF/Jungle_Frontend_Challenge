@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate, useRouter } from '@tanstack/react-router'
-import { AlertTriangle, CheckCircle2, ChevronLeft, Loader2, PlugZap, Unplug } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, ChevronLeft, Fingerprint, Loader2, LockKeyhole, PlugZap, ReceiptText, ShieldCheck, Unplug } from 'lucide-react'
 import { isApiError } from '@/api/client'
 import { buyerSchema, NETWORKS, WALLET_PROVIDERS, type Buyer, type Network, type Quote, type Wallet, type WalletProvider } from '@/api/contracts'
 import { useSession } from '@/app/session'
@@ -25,6 +25,63 @@ const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`
 
 type Connection = { state: 'idle' } | { state: 'connecting' } | { state: 'connected'; walletId: string } | { state: 'rejected'; message: string }
 
+function Steps() {
+  const steps = ['Carrinho', 'Pagamento', 'Confirmação']
+  return (
+    <nav aria-label="Etapas da compra" className="max-sm:w-full">
+      <ol className="flex w-full items-center justify-between gap-1 text-[11px] sm:w-auto sm:justify-start sm:gap-3 sm:text-sm">
+        {steps.map((label, i) => {
+          const done = i === 0
+          const current = i === 1
+          return (
+            <li key={label} className="flex items-center gap-1.5 sm:gap-3">
+              {i > 0 && <span aria-hidden className={cn('h-px w-3 sm:w-12', done || current ? 'bg-brand' : 'bg-line-soft')} />}
+              <span aria-current={current ? 'step' : undefined} className={cn('flex items-center gap-2', current ? 'font-bold text-highlight' : done ? 'text-cream' : 'text-sand')}>
+                <span
+                  aria-hidden
+                  className={cn('grid size-6 place-items-center rounded-full border text-[11px] font-bold', done ? 'border-brand bg-brand text-ink' : current ? 'border-brand text-highlight' : 'border-line-soft')}
+                >
+                  {done ? <Check className="size-3.5" /> : i + 1}
+                </span>
+                {done ? (
+                  <Link to="/cart" className="hover:text-highlight">
+                    {label}
+                  </Link>
+                ) : (
+                  label
+                )}
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
+  )
+}
+
+function Section({ step, title, id, hint, children }: { step: number; title: string; id: string; hint?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="rounded-[14px] border border-line bg-surface-card/40 p-5 sm:p-6">
+      <header className="mb-5 flex flex-wrap items-center justify-between gap-2">
+        <h2 id={id} className="flex items-center gap-3 text-lg font-bold">
+          <span aria-hidden className="grid size-7 place-items-center rounded-full bg-brand text-sm text-ink">
+            {step}
+          </span>
+          {title}
+        </h2>
+        {hint}
+      </header>
+      {children}
+    </section>
+  )
+}
+
+const TRUST = [
+  { icon: ShieldCheck, text: 'Total confirmado pelo servidor antes da compra' },
+  { icon: Fingerprint, text: 'Um pedido por confirmação, mesmo com cliques repetidos' },
+  { icon: ReceiptText, text: 'Recibo com hash da transação ao concluir' },
+]
+
 function ReadOnly({ label, value }: { label: string; value: string }) {
   return <Field label={label} value={value} readOnly className="[&_input]:bg-surface-card/60 [&_input]:text-sand" />
 }
@@ -40,7 +97,10 @@ function WalletPicker({ wallets, selected, onSelect }: { wallets: Wallet[]; sele
       </legend>
       <div role="radiogroup" aria-label="Carteira de pagamento" className="flex flex-col gap-3">
         {wallets.map((w) => (
-          <label key={w.id} className={cn('flex cursor-pointer items-start gap-3 rounded-[10px] bg-surface-card p-4 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-highlight', selected === w.id && 'outline outline-brand')}>
+          <label
+            key={w.id}
+            className={cn('flex cursor-pointer items-start gap-3 rounded-[10px] bg-surface-card p-4 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-highlight', selected === w.id && 'outline outline-brand')}
+          >
             <input type="radio" name="wallet" value={w.id} checked={selected === w.id} onChange={() => onSelect(w.id)} className="mt-1 accent-brand" />
             <span className="text-sm">
               <span className="block font-bold">
@@ -83,6 +143,7 @@ function ReviewDialog({
   return (
     <Dialog open={open} onOpenChange={(v) => !pending && onOpenChange(v)}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto border-line bg-surface-card sm:max-w-lg">
+        {pending && <div aria-hidden className="top-loader absolute inset-x-0 top-0 h-1 overflow-hidden rounded-t-lg bg-brand/15" />}
         <DialogTitle>Revise seu pedido</DialogTitle>
         <DialogDescription className="text-sand">Confira itens, valores, carteira e rede antes de confirmar.</DialogDescription>
         {changed && (
@@ -96,7 +157,10 @@ function ReviewDialog({
               {quote.items.map((i) => (
                 <li key={i.itemId} className="flex justify-between gap-3">
                   <span>
-                    {i.name} <span className="text-sand">({i.editionLabel}) × {i.quantity}</span>
+                    {i.name}{' '}
+                    <span className="text-sand">
+                      ({i.editionLabel}) × {i.quantity}
+                    </span>
                   </span>
                   <span className="text-highlight">{formatEth(i.lineTotalEth)}</span>
                 </li>
@@ -290,76 +354,96 @@ export function CheckoutPage() {
         </button>
         <h1 className="text-xl font-bold">Pagamento com carteira</h1>
       </div>
-      <nav aria-label="Trilha" className="mt-6 text-base font-bold max-md:hidden">
-        <Link to="/">Início</Link> / <Link to="/" hash="catalogo">Mercado</Link> / <span aria-current="page">Pagamento</span>
-      </nav>
-      <h1 className="sr-only max-md:hidden">Pagamento</h1>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-4 md:mt-8">
+        <h1 className="text-2xl font-bold max-md:sr-only">Pagamento</h1>
+        <Steps />
+      </div>
 
-      <form onSubmit={openReview} noValidate className="mt-8 grid gap-10 lg:grid-cols-[763px_1fr] lg:gap-8">
-        <section aria-labelledby="buyer" className="flex flex-col gap-6">
-          <h2 id="buyer" className="text-lg font-bold">
-            Perfil do colecionador
-          </h2>
-          <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-            <Field label="Nome de exibição" required error={errors.displayName} {...form.register('displayName')} />
-            <Field label="Nome de usuário" required error={errors.username} {...form.register('username')} />
-            <div className="flex flex-col gap-2">
-              <label htmlFor="checkout-network" className="text-sm">
-                Rede<span className="text-coral" aria-hidden>*</span>
-              </label>
-              <select
-                id="checkout-network"
-                value={activeNetwork}
-                onChange={(e) => setNetwork(e.target.value as Network)}
-                aria-invalid={!!networkError}
-                aria-describedby={networkError ? 'checkout-network-error' : undefined}
-                className={cn(inputClass, 'bg-ink')}
-              >
-                {NETWORKS.map((n) => (
-                  <option key={n} value={n}>
-                    {NETWORK_LABEL[n]}
-                  </option>
-                ))}
-              </select>
-              {networkError && (
-                <p id="checkout-network-error" className="text-xs text-danger">
-                  {networkError}
-                </p>
-              )}
+      <form onSubmit={openReview} noValidate className="mt-6 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_405px]">
+        <div className="flex flex-col gap-6">
+          <Section step={1} id="buyer" title="Perfil do colecionador">
+            <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+              <Field label="Nome de exibição" required error={errors.displayName} {...form.register('displayName')} />
+              <Field label="Nome de usuário" required error={errors.username} {...form.register('username')} />
+              <Field label="E-mail" type="email" required error={errors.email} {...form.register('email')} />
             </div>
-            <ReadOnly label="Nome do perfil" value={wallet?.ownerName ?? ''} />
-            <ReadOnly label="Endereço da carteira" value={wallet?.address ?? ''} />
-            <ReadOnly label="ENS ou carteira secundária" value={wallet?.ensName ?? secondary?.label ?? '—'} />
-            <ReadOnly label="Tipo de carteira" value={wallet ? PROVIDER_LABEL[wallet.provider] : ''} />
-            <ReadOnly label="Código de indicação" value={wallet?.referralCode ?? '—'} />
-            <Field label="E-mail" type="email" required error={errors.email} {...form.register('email')} />
-          </div>
-          {secondary && (
-            <label className="flex w-fit cursor-pointer items-center gap-2 text-sm">
-              <input type="checkbox" checked={wallet?.id === secondary.id} onChange={(e) => selectWallet(e.target.checked ? secondary.id : wallets[0]!.id)} className="size-4 accent-brand" />
-              Usar outra carteira? ({secondary.label})
-            </label>
-          )}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="checkout-note" className="text-sm">
-              Observação do colecionador (opcional)
-            </label>
-            <textarea id="checkout-note" rows={6} className={cn(inputClass, 'h-auto max-w-[350px] py-2')} aria-invalid={!!errors.note} {...form.register('note')} />
-            {errors.note && <p className="text-xs text-danger">{errors.note.message}</p>}
-          </div>
-        </section>
+          </Section>
+          <Section
+            step={2}
+            id="receiving-wallet"
+            title="Carteira de recebimento"
+            hint={
+              <span className="flex items-center gap-1.5 text-xs text-sand">
+                <LockKeyhole className="size-3.5 text-brand" aria-hidden /> Dados lidos da carteira cadastrada
+              </span>
+            }
+          >
+            <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="checkout-network" className="text-sm">
+                  Rede
+                  <span className="text-coral" aria-hidden>
+                    *
+                  </span>
+                </label>
+                <select
+                  id="checkout-network"
+                  value={activeNetwork}
+                  onChange={(e) => setNetwork(e.target.value as Network)}
+                  aria-invalid={!!networkError}
+                  aria-describedby={networkError ? 'checkout-network-error' : undefined}
+                  className={cn(inputClass, 'bg-ink')}
+                >
+                  {NETWORKS.map((n) => (
+                    <option key={n} value={n}>
+                      {NETWORK_LABEL[n]}
+                    </option>
+                  ))}
+                </select>
+                {networkError && (
+                  <p id="checkout-network-error" className="text-xs text-danger">
+                    {networkError}
+                  </p>
+                )}
+              </div>
+              <ReadOnly label="Nome do perfil" value={wallet?.ownerName ?? ''} />
+              <ReadOnly label="Endereço da carteira" value={wallet?.address ?? ''} />
+              <ReadOnly label="ENS ou carteira secundária" value={wallet?.ensName ?? secondary?.label ?? '—'} />
+              <ReadOnly label="Tipo de carteira" value={wallet ? PROVIDER_LABEL[wallet.provider] : ''} />
+              <ReadOnly label="Código de indicação" value={wallet?.referralCode ?? '—'} />
+            </div>
+            {secondary && (
+              <label className="mt-5 flex w-fit cursor-pointer items-center gap-2 text-sm">
+                <input type="checkbox" checked={wallet?.id === secondary.id} onChange={(e) => selectWallet(e.target.checked ? secondary.id : wallets[0]!.id)} className="size-4 accent-brand" />
+                Usar outra carteira? ({secondary.label})
+              </label>
+            )}
+          </Section>
+          <Section step={3} id="note-title" title="Observação">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="checkout-note" className="text-sm">
+                Observação do colecionador (opcional)
+              </label>
+              <textarea id="checkout-note" rows={4} className={cn(inputClass, 'h-auto py-2')} aria-invalid={!!errors.note} {...form.register('note')} />
+              {errors.note && <p className="text-xs text-danger">{errors.note.message}</p>}
+            </div>
+          </Section>
+        </div>
 
-        <aside aria-labelledby="your-nfts" className="flex flex-col gap-5">
+        <aside aria-labelledby="your-nfts" className="flex flex-col gap-5 rounded-[14px] border border-line bg-surface-card p-5 shadow-[0_24px_48px_-28px_rgb(0_0_0/0.9)] sm:p-6 lg:sticky lg:top-6">
           <div className="lg:hidden">
             <WalletPicker wallets={wallets} selected={wallet?.id} onSelect={selectWallet} />
           </div>
-          <h2 id="your-nfts" className="text-lg font-bold">
+          <h2 id="your-nfts" className="flex items-center justify-between text-lg font-bold">
             Seus NFTs
+            <span className="text-xs font-normal text-sand">
+              {cart.data.items.length} {cart.data.items.length === 1 ? 'item' : 'itens'}
+            </span>
           </h2>
           <ul className="flex flex-col gap-2" aria-busy={quote.isFetching}>
             {(quote.data?.items ?? []).map((i) => (
-              <li key={i.itemId} className="flex items-center gap-3 bg-surface-card pr-4">
-                <NftImage image={i.image} alt="" sizes="70px" className="size-[70px]" />
+              <li key={i.itemId} className="flex items-center gap-3 rounded-[10px] bg-surface-raised/60 p-2 pr-3">
+                <NftImage image={i.image} alt="" sizes="70px" className="size-[56px] rounded-[8px]" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-bold">{i.name}</span>
                   <span className="block text-sm text-sand">Edição {i.editionLabel}</span>
@@ -369,9 +453,14 @@ export function CheckoutPage() {
               </li>
             ))}
           </ul>
-          <details className="text-sm">
-            <summary className="cursor-pointer text-center">Tem um código promocional? Aplique aqui</summary>
-            <div className="mt-3">
+          <details className="group/coupon border-y border-line py-3 text-sm">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-sand transition-colors hover:text-cream [&::-webkit-details-marker]:hidden">
+              Tem um código promocional? Aplique aqui
+              <span aria-hidden className="text-lg leading-none text-highlight transition-transform duration-300 group-open/coupon:rotate-45">
+                +
+              </span>
+            </summary>
+            <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-300">
               <CouponField compact />
             </div>
           </details>
@@ -382,7 +471,10 @@ export function CheckoutPage() {
             <legend className="mb-3 w-full text-center font-bold">Carteira e rede</legend>
             <div role="radiogroup" aria-label="Conector da carteira" className="flex flex-col gap-3">
               {WALLET_PROVIDERS.map((p) => (
-                <label key={p} className={cn('flex cursor-pointer items-center gap-3 border border-line px-4 py-3 text-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-highlight', activeProvider === p && 'border-cream')}>
+                <label
+                  key={p}
+                  className={cn('flex cursor-pointer items-center gap-3 border border-line px-4 py-3 text-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-highlight', activeProvider === p && 'border-cream')}
+                >
                   <input
                     type="radio"
                     name="provider"
@@ -427,7 +519,17 @@ export function CheckoutPage() {
               {connection.state === 'connecting' ? 'Conectando…' : `Conectar ${PROVIDER_LABEL[activeProvider]}`}
             </Button>
           )}
-          <p className="text-center text-xs text-sand">Nenhum valor é cobrado de verdade: carteira e pagamento são simulados.</p>
+          <ul className="flex flex-col gap-2 border-t border-line pt-4 text-xs text-sand">
+            {TRUST.map(({ icon: TrustIcon, text }) => (
+              <li key={text} className="flex items-center gap-2">
+                <TrustIcon className="size-4 shrink-0 text-brand" aria-hidden />
+                {text}
+              </li>
+            ))}
+          </ul>
+          <p className="flex items-center justify-center gap-1.5 rounded-md bg-surface-raised/60 px-3 py-2 text-center text-xs text-sand">
+            <LockKeyhole className="size-3.5 shrink-0" aria-hidden /> Ambiente de demonstração: nenhum valor é cobrado de verdade.
+          </p>
           <div className="max-lg:hidden">
             <WalletPicker wallets={wallets} selected={wallet?.id} onSelect={selectWallet} />
           </div>
