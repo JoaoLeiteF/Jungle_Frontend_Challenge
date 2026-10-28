@@ -32,6 +32,8 @@ function useCartMutation<V>(fn: (v: V) => Promise<Cart>, opts: { success?: (v: V
   const key = qk.cart(scope)
   return useMutation({
     mutationFn: fn,
+    // Cart writes run one at a time: rapid +/− clicks can't resolve out of order and clobber each other.
+    scope: { id: 'cart' },
     onMutate: async (v: V) => {
       if (!opts.optimistic) return {}
       await qc.cancelQueries({ queryKey: key })
@@ -69,6 +71,7 @@ export function useCoupon() {
   const scope = useScope()
   return useMutation({
     mutationFn: (code: string | null) => api.cart.setCoupon(code),
+    scope: { id: 'cart' },
     onSuccess: (cart, code) => {
       qc.setQueryData(qk.cart(scope), cart)
       qc.invalidateQueries({ queryKey: qk.quote(scope) })

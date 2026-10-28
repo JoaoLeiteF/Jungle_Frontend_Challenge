@@ -307,7 +307,7 @@ function settle(order: PendingOrder) {
       order.rejectionReason = 'Uma das edições esgotou antes da liquidação. Nenhum valor foi cobrado.'
     } else {
       order.status = 'confirmed'
-      order.txHash = `0x${hash(order.id).padEnd(8, '0')}${hash(order.createdAt).padEnd(8, '0')}${'a'.repeat(48)}`.slice(0, 66)
+      order.txHash = `0x${Array.from({ length: 8 }, (_, i) => (parseInt(hash(`${order.id}:${order.createdAt}:${i}`), 36) >>> 0).toString(16).padStart(8, '0')).join('')}`
       order.explorerUrl = `https://etherscan.io/tx/${order.txHash}`
       for (const p of order.purchased) {
         const nft = db.nfts.find((n) => n.id === p.nftId)!
@@ -636,9 +636,13 @@ export const handlers = [
     return dto
   }),
   // wallet connection simulation (no real extension): connect may be refused, disconnect always works
-  route('post', '/wallets/:id/connect', (ctx) => {
+  route('post', '/wallets/:id/connect', async (ctx) => {
     const { user, session } = requireUser(ctx.request)
     const wallet = db.wallets.find((w) => w.id === param(ctx, 'id') && w.userId === user.id) ?? fail(404, 'NOT_FOUND', 'Carteira não encontrada.')
+    const { provider } = (await json(ctx)) as { provider?: string }
+    const names: Record<string, string> = { metamask: 'MetaMask', walletconnect: 'WalletConnect', coinbase: 'Coinbase Wallet' }
+    if (provider !== wallet.provider)
+      fail(409, 'WALLET_REJECTED', `A carteira ${wallet.label} é ${names[wallet.provider]}: conecte por ${names[wallet.provider]}.`, { provider: 'Conector incompatível com a carteira.' })
     if (is('wallet-rejected')) fail(403, 'WALLET_REJECTED', 'A conexão foi recusada na carteira.')
     session.connectedWalletId = wallet.id
     return { ok: true, walletId: wallet.id, address: wallet.address }

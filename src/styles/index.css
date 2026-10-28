@@ -2,6 +2,9 @@
 @import 'tw-animate-css';
 @import '@fontsource-variable/roboto-mono';
 
+/* The theme is dark by design: shadcn's `dark:` variants must not depend on the OS setting */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Kurio tokens — extraídos dos color styles do Figma (docs/figma/README.md) */
 @theme {
   --font-mono: 'Roboto Mono Variable', ui-monospace, monospace;

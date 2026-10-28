@@ -32,7 +32,7 @@ const SLIDES = [
   { image: 'golden-beat', eyebrow: 'Em alta esta semana', title: 'Os drops que os colecionadores mais disputam', text: 'Edições limitadas com alta procura — entre antes que a próxima esgote.', search: { tab: 'trending' as const } },
 ]
 
-function Hero() {
+export function Hero() {
   const [index, setIndex] = useState(0)
   const slide = SLIDES[index]!
   return (

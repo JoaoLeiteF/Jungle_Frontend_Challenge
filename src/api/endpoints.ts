@@ -17,6 +17,7 @@ import {
   type ProfileInput,
   type RegisterInput,
   type WalletInput,
+  type WalletProvider,
 } from './contracts'
 
 type Opts = { signal?: AbortSignal }
@@ -73,7 +74,8 @@ export const api = {
     list: ({ signal }: Opts = {}) => request(z.object({ items: z.array(walletSchema) }), { url: '/wallets', signal }),
     create: (body: WalletInput) => request(walletSchema, { method: 'POST', url: '/wallets', data: body }),
     update: (id: string, body: WalletInput) => request(walletSchema, { method: 'PATCH', url: `/wallets/${id}`, data: body }),
-    connect: (id: string) => request(z.object({ ok: z.literal(true), walletId: z.string(), address: z.string() }), { method: 'POST', url: `/wallets/${id}/connect` }),
+    connect: (id: string, provider: WalletProvider) =>
+      request(z.object({ ok: z.literal(true), walletId: z.string(), address: z.string() }), { method: 'POST', url: `/wallets/${id}/connect`, data: { provider } }),
     disconnect: (id: string) => request(ok, { method: 'POST', url: `/wallets/${id}/disconnect` }),
   },
 }

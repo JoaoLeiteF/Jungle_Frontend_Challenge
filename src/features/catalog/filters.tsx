@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import type { CatalogPage } from '@/api/contracts'
 import type { CatalogSearch } from '@/app/router'
 import { Slider } from '@/components/ui/slider'
@@ -53,10 +53,6 @@ function PriceRange({ range, search, onApply }: { range: { min: string; max: str
   const bounds = [Number(range.min), Number(range.max)] as const
   const [min, setMin] = useState(search.min ?? range.min)
   const [max, setMax] = useState(search.max ?? range.max)
-  useEffect(() => {
-    setMin(search.min ?? range.min)
-    setMax(search.max ?? range.max)
-  }, [search.min, search.max, range.min, range.max])
 
   const valid = isEth(min) && isEth(max) && cmpEth(min, max) <= 0
   return (
@@ -119,7 +115,8 @@ export function Filters({ data, search, onChange }: { data?: CatalogPage; search
   return (
     <div className="flex flex-col gap-8">
       <FacetList title="Coleções" items={data.facets.collections} selected={search.collections} onToggle={(v) => onChange({ collections: toggleIn(search.collections, v) })} />
-      <PriceRange range={data.facets.priceRange} search={search} onApply={onChange} />
+      {/* keyed so the inputs re-sync when the URL (back/forward, clear) changes the bounds */}
+      <PriceRange key={`${search.min}|${search.max}|${data.facets.priceRange.min}|${data.facets.priceRange.max}`} range={data.facets.priceRange} search={search} onApply={onChange} />
       <FacetList title="Rede" items={data.facets.networks} selected={search.networks} onToggle={(v) => onChange({ networks: toggleIn(search.networks, v) })} />
     </div>
   )

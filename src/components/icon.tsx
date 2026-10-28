@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export type FigmaIcon = 'search' | 'shop' | 'user' | 'arrow-down' | 'message' | 'x' | 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube'
+export type FigmaIcon = 'search' | 'shop' | 'user' | 'arrow-down' | 'message' | 'x' | 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube' | 'thank-you'
 
 /** Figma-exported SVGs (public/icons) painted with currentColor through a CSS mask — no JS, no duplication. */
 export function Icon({ name, className }: { name: FigmaIcon; className?: string }) {

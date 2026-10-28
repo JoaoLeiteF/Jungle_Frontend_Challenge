@@ -19,7 +19,7 @@ export default tseslint.config(
   },
   {
     // shadcn/ui primitives and route modules co-export helpers by design
-    files: ['src/components/ui/**', 'src/app/**', 'src/features/**/queries.ts'],
+    files: ['src/components/ui/**', 'src/components/field.tsx', 'src/app/**', 'src/realtime/**', 'src/features/**'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
 )

@@ -6,6 +6,7 @@ import { RootLayout } from './layout'
 import { queryClient } from './query'
 import { session } from './session'
 import { NotFoundPage } from '@/features/misc/not-found'
+import { Skeleton } from '@/components/states'
 
 interface RouterContext {
   queryClient: typeof queryClient
@@ -109,6 +110,14 @@ export const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultPreload: 'intent',
+  // shown while a lazy route chunk or guard resolves (avoids a blank frame)
+  defaultPendingComponent: () => (
+    <div role="status" aria-label="Carregando página" className="mt-10 flex flex-col gap-4">
+      <Skeleton className="h-8 w-1/3" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  ),
+  defaultPendingMs: 150,
   defaultPreloadStaleTime: 0, // Query owns caching
   scrollRestoration: true,
 })
