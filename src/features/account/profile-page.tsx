@@ -53,7 +53,7 @@ function ProfileForm() {
     setAvatar(await readAsDataUrl(file))
   }
 
-  if (me.isError) return <ErrorState onRetry={() => me.refetch()} />
+  if (me.isError) return <ErrorState onRetry={() => me.refetch()} retrying={me.isFetching} />
   if (!me.data) return <Skeleton className="h-80" />
   const shown = avatar === undefined ? me.data.avatarUrl : avatar
   const { errors, isSubmitting } = form.formState
@@ -100,7 +100,7 @@ function ProfileForm() {
           {avatar !== undefined && <p className="text-xs text-sand">Salve para aplicar o novo avatar.</p>}
         </div>
       </div>
-      <Button type="submit" disabled={isSubmitting} className="h-[38px] w-fit px-8">
+      <Button type="submit" loading={isSubmitting} className="h-[38px] w-fit px-8">
         {isSubmitting ? 'Salvando…' : 'Salvar'}
       </Button>
     </form>
@@ -131,7 +131,7 @@ function PasswordForm() {
       <Field label="Senha atual" type="password" autoComplete="current-password" error={errors.currentPassword} {...form.register('currentPassword')} />
       <Field label="Nova senha" type="password" autoComplete="new-password" hint="Mínimo de 8 caracteres, com letra e número." error={errors.newPassword} {...form.register('newPassword')} />
       <Field label="Confirmar nova senha" type="password" autoComplete="new-password" error={errors.confirmPassword} {...form.register('confirmPassword')} />
-      <Button type="submit" disabled={isSubmitting} className="h-[38px] w-fit px-8">
+      <Button type="submit" loading={isSubmitting} className="h-[38px] w-fit px-8">
         {isSubmitting ? 'Alterando…' : 'Alterar senha'}
       </Button>
     </form>

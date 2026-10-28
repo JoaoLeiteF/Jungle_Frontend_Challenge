@@ -79,7 +79,7 @@ function LoginForm() {
       <Link to="/em-breve" search={{ secao: 'Recuperação de senha' }} className="self-end text-xs text-highlight hover:underline">
         Esqueceu a senha?
       </Link>
-      <Button type="submit" disabled={isSubmitting} className="h-10 text-sm max-md:h-12 max-md:text-base">
+      <Button type="submit" loading={isSubmitting} className="h-10 text-sm max-md:h-12 max-md:text-base">
         {isSubmitting ? 'Entrando…' : 'Entrar'}
       </Button>
     </form>
@@ -107,7 +107,7 @@ function RegisterForm() {
       <Field label="E-mail" hideLabel type="email" autoComplete="email" placeholder="Digite seu e-mail" error={errors.email} {...form.register('email')} />
       <Field label="Senha" hideLabel type="password" autoComplete="new-password" placeholder="Senha" hint="Mínimo de 8 caracteres, com letra e número." error={errors.password} {...form.register('password')} />
       <Field label="Confirmar senha" hideLabel type="password" autoComplete="new-password" placeholder="Confirmar senha" error={errors.confirmPassword} {...form.register('confirmPassword')} />
-      <Button type="submit" disabled={isSubmitting} className="h-10 text-sm max-md:h-12 max-md:text-base">
+      <Button type="submit" loading={isSubmitting} className="h-10 text-sm max-md:h-12 max-md:text-base">
         {isSubmitting ? 'Criando…' : 'Criar conta'}
       </Button>
     </form>

@@ -120,6 +120,29 @@
   }
 }
 
+/* A light sweep across the RARO badge while its card is hovered. */
+.rare-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.45) 50%, transparent 65%);
+  transform: translateX(-120%);
+}
+.group:hover .rare-badge::after {
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateX(120%);
+}
+
+/* Below-the-fold sections rise in as they scroll into view (native scroll timeline, no JS). */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(24px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal { animation: reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 70%; }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   .skeleton { animation: none; background: var(--color-surface-raised); }

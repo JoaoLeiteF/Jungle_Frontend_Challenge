@@ -102,7 +102,7 @@ export function CartPage() {
       <h1 className="sr-only max-md:hidden">Carrinho de NFTs</h1>
 
       {cart.isError && !cart.data ? (
-        <ErrorState className="mt-8" message={isApiError(cart.error) ? cart.error.message : undefined} onRetry={() => cart.refetch()} />
+        <ErrorState className="mt-8" message={isApiError(cart.error) ? cart.error.message : undefined} onRetry={() => cart.refetch()} retrying={cart.isFetching} />
       ) : !cart.data ? (
         <div className="mt-8 flex flex-col gap-3" role="status" aria-label="Carregando carrinho">
           {Array.from({ length: 3 }, (_, i) => (
@@ -139,7 +139,7 @@ export function CartPage() {
             <CouponField />
             <QuoteIssues quote={quote.data} />
             {quote.isError && !quote.data ? (
-              <ErrorState title="Não foi possível calcular o resumo" onRetry={() => quote.refetch()} />
+              <ErrorState title="Não foi possível calcular o resumo" onRetry={() => quote.refetch()} retrying={quote.isFetching} />
             ) : (
               <QuoteTotals quote={quote.data} loading={quote.isFetching} />
             )}

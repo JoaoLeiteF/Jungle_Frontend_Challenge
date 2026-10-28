@@ -14,7 +14,7 @@ export function FavoritesPage() {
         Lista de interesse
       </h1>
       {favorites.isError ? (
-        <ErrorState onRetry={() => favorites.refetch()} />
+        <ErrorState onRetry={() => favorites.refetch()} retrying={favorites.isFetching} />
       ) : favorites.data && !ids.length ? (
         <EmptyState title="Nenhum favorito ainda">
           <Link to="/" hash="catalogo" className="text-highlight underline">

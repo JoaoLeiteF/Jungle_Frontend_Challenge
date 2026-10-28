@@ -258,7 +258,7 @@ export function CheckoutPage() {
         <Loader2 className="animate-spin" aria-hidden /> Recuperando sua tentativa de compra…
       </p>
     )
-  if (walletsQ.isError || me.isError) return <ErrorState className="mt-10" onRetry={() => (walletsQ.refetch(), me.refetch())} />
+  if (walletsQ.isError || me.isError) return <ErrorState className="mt-10" onRetry={() => (walletsQ.refetch(), me.refetch())} retrying={walletsQ.isFetching || me.isFetching} />
   if (!walletsQ.data || !cart.data)
     return (
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_405px]" role="status" aria-label="Carregando pagamento">
@@ -422,7 +422,7 @@ export function CheckoutPage() {
           </div>
 
           {connection.state === 'connected' ? (
-            <Button type="submit" disabled={!!networkError || !quote.data || create.isPending} className="h-12 text-base max-md:rounded-full">
+            <Button type="submit" disabled={!!networkError || !quote.data} loading={create.isPending} className="h-12 text-base max-md:rounded-full">
               Revisar e confirmar compra
             </Button>
           ) : (

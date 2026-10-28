@@ -10,14 +10,19 @@ import { EmptyState, ErrorState, RefreshingHint } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { formatEth } from '@/lib/eth'
 import { cn } from '@/lib/utils'
 import { Filters, type SearchPatch } from './filters'
 import { NftCard, NftCardSkeleton } from './nft-card'
-import { catalogQuery, toCatalogQuery } from './queries'
+import { catalogQuery, nftQuery, toCatalogQuery } from './queries'
 
 const route = getRouteApi('/')
 
-const TAB_LABEL: Record<Tab, string> = { all: 'Todos os NFTs', new: 'Novos lançamentos', trending: 'Em alta' }
+const TAB_LABEL: Record<Tab, string> = {
+  all: 'Todos os NFTs',
+  new: 'Novos lançamentos',
+  trending: 'Em alta',
+}
 const SORT_LABEL: Record<Sort, string> = {
   recent: 'Listados recentemente',
   'price-asc': 'Menor preço',
@@ -27,42 +32,114 @@ const SORT_LABEL: Record<Sort, string> = {
 }
 
 const SLIDES = [
-  { image: 'emerald-ape', eyebrow: 'Bem-vindo à Kurio', title: 'Seja dono do futuro da arte digital', text: 'Descubra NFTs selecionados de criadores emergentes e consagrados. Colecione arte digital rara, apoie artistas e tenha uma parte da cultura da internet.', search: {} },
-  { image: 'sage-nomad', eyebrow: 'Coleções verificadas', title: 'Arte com procedência registrada na rede', text: 'Cada obra tem histórico imutável, metadados no IPFS e royalties automáticos para quem cria.', search: { collections: 'colecionaveis' } },
-  { image: 'golden-beat', eyebrow: 'Em alta esta semana', title: 'Os drops que os colecionadores mais disputam', text: 'Edições limitadas com alta procura — entre antes que a próxima esgote.', search: { tab: 'trending' as const } },
+  {
+    image: 'emerald-ape',
+    eyebrow: 'Bem-vindo à Kurio',
+    title: 'Seja dono do futuro da arte digital',
+    text: 'Descubra NFTs selecionados de criadores emergentes e consagrados. Colecione arte digital rara, apoie artistas e tenha uma parte da cultura da internet.',
+    search: {},
+  },
+  {
+    image: 'sage-nomad',
+    eyebrow: 'Coleções verificadas',
+    title: 'Arte com procedência registrada na rede',
+    text: 'Cada obra tem histórico imutável, metadados no IPFS e royalties automáticos para quem cria.',
+    search: { collections: 'colecionaveis' },
+  },
+  {
+    image: 'golden-beat',
+    eyebrow: 'Em alta esta semana',
+    title: 'Os drops que os colecionadores mais disputam',
+    text: 'Edições limitadas com alta procura — entre antes que a próxima esgote.',
+    search: { tab: 'trending' as const },
+  },
 ]
+
+const AUTOPLAY_MS = 6000
 
 export function Hero() {
   const [index, setIndex] = useState(0)
-  const slide = SLIDES[index]!
+  const [paused, setPaused] = useState(false)
+  // Off-screen art loads after first paint so it never competes with the LCP image. Text always
+  // renders: the track is as tall as its tallest slide, so mounting it late would shift the page.
+  const [warm, setWarm] = useState(false)
+  const touchX = useRef<number | null>(null)
+  const go = (i: number) => setIndex((i + SLIDES.length) % SLIDES.length)
+
+  useEffect(() => {
+    const t = setTimeout(() => setWarm(true), 1500)
+    return () => clearTimeout(t)
+  }, [])
+  useEffect(() => {
+    if (paused || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const t = setTimeout(() => setIndex((i) => (i + 1) % SLIDES.length), AUTOPLAY_MS)
+    return () => clearTimeout(t)
+  }, [index, paused])
+
   return (
-    <section aria-roledescription="carrossel" aria-label="Destaques" className="relative mt-6 overflow-hidden rounded-[20px] bg-surface-card md:mt-0 md:overflow-visible md:rounded-none md:bg-transparent">
-      <div className="grid grid-cols-[1fr_40%] items-center gap-3 p-4 md:grid-cols-[1fr_minmax(0,450px)] md:gap-10 md:p-0 md:py-6" aria-live="polite">
-        <div className="md:pl-8">
-          <p className="text-xs font-medium tracking-[0.1em] md:text-sm">{slide.eyebrow}</p>
-          <h1 className="mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:max-w-[600px] md:text-[43px] md:leading-[70px]">{slide.title}</h1>
-          <p className="mt-2 max-w-[520px] text-[11px] leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]">{slide.text}</p>
-          <Button asChild className="mt-3 h-[31px] px-4 text-sm md:mt-8 md:px-5 md:text-base">
-            <Link to="/" search={slide.search} hash="catalogo">
-              EXPLORAR
-            </Link>
-          </Button>
-        </div>
-        <div className="w-full max-w-[450px]">
-          <NftImage image={slide.image} alt={`Arte em destaque: ${slide.title}`} priority={index === 0} sizes="(min-width: 768px) 450px, 40vw" className="rounded-[14px] md:rounded-hero" />
-        </div>
+    <section
+      aria-roledescription="carrossel"
+      aria-label="Destaques"
+      className="relative mt-6 overflow-hidden rounded-[20px] bg-surface-card md:mt-0 md:rounded-none md:bg-transparent"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setPaused(false)}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowRight') go(index + 1)
+        if (e.key === 'ArrowLeft') go(index - 1)
+      }}
+      onTouchStart={(e) => (touchX.current = e.touches[0]!.clientX)}
+      onTouchEnd={(e) => {
+        const dx = e.changedTouches[0]!.clientX - (touchX.current ?? e.changedTouches[0]!.clientX)
+        if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1))
+      }}
+    >
+      <div className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]" style={{ transform: `translateX(-${index * 100}%)` }} aria-live={paused ? 'polite' : 'off'}>
+        {SLIDES.map((slide, i) => {
+          const active = i === index
+          const Title = active ? 'h1' : 'p'
+          return (
+            <div
+              key={slide.image}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} de ${SLIDES.length}`}
+              inert={!active}
+              className={cn(
+                'grid w-full shrink-0 grid-cols-[1fr_40%] items-center gap-3 p-4 transition-opacity duration-700 md:grid-cols-[1fr_minmax(0,450px)] md:gap-10 md:p-0 md:py-6',
+                active ? 'opacity-100' : 'opacity-0',
+              )}
+            >
+              <div className="md:pl-8">
+                <p className="text-xs font-medium tracking-[0.1em] md:text-sm">{slide.eyebrow}</p>
+                <Title className="mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:max-w-[600px] md:text-[43px] md:leading-[70px]">{slide.title}</Title>
+                <p className="mt-2 max-w-[520px] text-[11px] leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]">{slide.text}</p>
+                <Button asChild className="mt-3 h-[31px] px-4 text-sm md:mt-8 md:px-5 md:text-base">
+                  <Link to="/" search={slide.search} hash="catalogo">
+                    EXPLORAR
+                  </Link>
+                </Button>
+              </div>
+              <div className="aspect-square w-full max-w-[450px] overflow-hidden rounded-[14px] md:rounded-hero">
+                {(i === 0 || warm) && (
+                  <NftImage
+                    image={slide.image}
+                    alt={`Arte em destaque: ${slide.title}`}
+                    priority={i === 0 || warm}
+                    sizes="(min-width: 768px) 450px, 40vw"
+                    className={cn('transition-transform duration-[1200ms] ease-out', active ? 'scale-100' : 'scale-105')}
+                  />
+                )}
+              </div>
+            </div>
+          )
+        })}
       </div>
       <div className="flex justify-center pb-2 md:absolute md:bottom-9 md:left-[52%] md:pb-0">
         {SLIDES.map((s, i) => (
-          <button
-            key={s.image}
-            type="button"
-            onClick={() => setIndex(i)}
-            aria-label={`Destaque ${i + 1} de ${SLIDES.length}`}
-            aria-current={i === index}
-            className="grid size-6 place-items-center"
-          >
-            <span aria-hidden className={cn('size-2.5 rounded-full border border-brand', i === index ? 'bg-brand' : 'bg-brand/40')} />
+          <button key={s.image} type="button" onClick={() => setIndex(i)} aria-label={`Destaque ${i + 1} de ${SLIDES.length}`} aria-current={i === index} className="group/dot grid h-6 min-w-6 place-items-center px-1">
+            <span aria-hidden className={cn('h-2.5 rounded-full border border-brand transition-all duration-500 ease-out', i === index ? 'w-6 bg-brand' : 'w-2.5 bg-brand/40 group-hover/dot:bg-brand/70')} />
           </button>
         ))}
       </div>
@@ -111,13 +188,30 @@ function Pagination({ page, pageCount, onPage }: { page: number; pageCount: numb
 }
 
 function Featured() {
+  const nft = useQuery(nftQuery('sage-nomad-009')).data
   return (
-    <Link to="/nft/$nftId" params={{ nftId: 'sage-nomad-009' }} className="group block bg-surface-card pt-4 hover:bg-surface-raised">
+    <Link
+      to="/nft/$nftId"
+      params={{ nftId: 'sage-nomad-009' }}
+      className="group block overflow-hidden rounded-[22px] border border-line bg-surface-card pt-4 transition-[background-color,border-color,box-shadow] duration-300 hover:border-brand/60 hover:bg-surface-raised hover:shadow-[0_16px_32px_-16px_rgb(0_0_0/0.7)]"
+    >
       <p className="px-4 text-lg font-bold tracking-wide text-highlight">NFT EM DESTAQUE</p>
-      <p className="px-4 pb-3 text-center font-bold">
+      <p className="flex items-center justify-center gap-2 px-4 pb-3 font-bold">
+        <span aria-hidden className="relative flex size-2">
+          <span className="absolute inset-0 animate-ping rounded-full bg-brand opacity-75" />
+          <span className="relative size-2 rounded-full bg-brand" />
+        </span>
         OFERTA LIMITADA<span className="sr-only">: Sage Nomad #009</span>
       </p>
-      <NftImage image="sage-nomad" alt="" sizes="(min-width: 1024px) 310px, 90vw" className="aspect-[310/368] rounded-[22px] object-[50%_20%]" />
+      <div className="relative overflow-hidden rounded-[22px]">
+        <NftImage image="sage-nomad" alt="" sizes="(min-width: 1024px) 310px, 90vw" className="aspect-[310/368] object-[50%_20%] transition-transform duration-700 ease-out group-hover:scale-105" />
+        {nft && (
+          <div aria-hidden className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-linear-to-t from-ink/90 via-ink/50 to-transparent px-4 pt-12 pb-4 animate-in fade-in duration-500">
+            <span className="text-sm font-bold">{nft.name}</span>
+            <span className="text-sm font-bold text-highlight">{formatEth(nft.listPriceEth)}</span>
+          </div>
+        )}
+      </div>
     </Link>
   )
 }
@@ -130,7 +224,15 @@ function Catalog() {
   const data = catalog.data
 
   // Any filter change restarts pagination; only explicit page moves keep it.
-  const update = (patch: SearchPatch, keepPage = false) => navigate({ search: (prev) => ({ ...prev, ...patch, ...(keepPage ? {} : { page: undefined }) }), resetScroll: false })
+  const update = (patch: SearchPatch, keepPage = false) =>
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        ...patch,
+        ...(keepPage ? {} : { page: undefined }),
+      }),
+      resetScroll: false,
+    })
   const goToPage = (page: number) => {
     update({ page: page === 1 ? undefined : page }, true)
     topRef.current?.scrollIntoView({ block: 'start' })
@@ -157,7 +259,9 @@ function Catalog() {
             className="flex flex-1 items-center gap-2 rounded-[10px] bg-surface-card px-3"
             onSubmit={(e) => {
               e.preventDefault()
-              update({ q: String(new FormData(e.currentTarget).get('q') ?? '').trim() || undefined })
+              update({
+                q: String(new FormData(e.currentTarget).get('q') ?? '').trim() || undefined,
+              })
             }}
           >
             <Icon name="search" className="size-4 text-cream" />
@@ -224,7 +328,7 @@ function Catalog() {
         </div>
 
         {catalog.isError && !data ? (
-          <ErrorState className="mt-6" message={isApiError(catalog.error) ? catalog.error.message : undefined} onRetry={() => catalog.refetch()} />
+          <ErrorState className="mt-6" message={isApiError(catalog.error) ? catalog.error.message : undefined} onRetry={() => catalog.refetch()} retrying={catalog.isFetching} />
         ) : !data ? (
           <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-[22px] md:gap-y-[38px]" aria-label="Carregando NFTs">
             {Array.from({ length: 9 }, (_, i) => (
@@ -245,7 +349,7 @@ function Catalog() {
           </EmptyState>
         ) : (
           <>
-            {catalog.isError && <ErrorState className="mt-4" title="Não foi possível atualizar" message="Mostrando os últimos resultados carregados." onRetry={() => catalog.refetch()} />}
+            {catalog.isError && <ErrorState className="mt-4" title="Não foi possível atualizar" message="Mostrando os últimos resultados carregados." onRetry={() => catalog.refetch()} retrying={catalog.isFetching} />}
             <ul className={cn('mt-4 grid grid-cols-2 gap-x-4 gap-y-8 transition-opacity md:grid-cols-3 md:gap-x-[22px] md:gap-y-[38px]', catalog.isPlaceholderData && 'opacity-60')} aria-busy={catalog.isFetching}>
               {data.items.map((nft, i) => (
                 <li key={nft.id}>
@@ -263,20 +367,35 @@ function Catalog() {
 
 function Promos() {
   const items = [
-    { image: 'emerald-ape', title: 'Lançamentos gênesis de edição limitada', text: 'Colecione edições escassas diretamente dos criadores antes da revelação pública.', search: { tab: 'new' as const } },
-    { image: 'neon-vessel', title: 'Arte digital selecionada e muito mais', text: 'Explore novos artistas, coleções verificadas e obras digitais que definem a cultura.', search: { collections: 'arte-digital' } },
+    {
+      image: 'emerald-ape',
+      title: 'Lançamentos gênesis de edição limitada',
+      text: 'Colecione edições escassas diretamente dos criadores antes da revelação pública.',
+      search: { tab: 'new' as const },
+    },
+    {
+      image: 'neon-vessel',
+      title: 'Arte digital selecionada e muito mais',
+      text: 'Explore novos artistas, coleções verificadas e obras digitais que definem a cultura.',
+      search: { collections: 'arte-digital' },
+    },
   ]
   return (
     <section aria-label="Promoções" className="grid gap-6 md:grid-cols-2 md:gap-[38px]">
       {items.map((p) => (
-        <article key={p.image} className="grid grid-cols-[minmax(0,156px)_1fr] items-center gap-4 bg-surface-card lg:h-[250px] lg:grid-cols-[290px_1fr]">
-          <NftImage image={p.image} alt="" sizes="(min-width: 1024px) 290px, 156px" className="h-full rounded-[14px] object-cover" />
-          <div className="min-w-0 py-4 pr-4 text-right">
+        <article
+          key={p.image}
+          className="reveal group grid grid-cols-[minmax(0,156px)_1fr] items-stretch gap-4 overflow-hidden rounded-[8px] bg-surface-card transition-shadow duration-300 hover:shadow-[0_16px_32px_-16px_rgb(0_0_0/0.7)] lg:h-[250px] lg:grid-cols-[290px_1fr] lg:gap-6"
+        >
+          <div className="overflow-hidden rounded-r-[14px]">
+            <NftImage image={p.image} alt="" sizes="(min-width: 1024px) 290px, 156px" className="h-full transition-transform duration-700 ease-out group-hover:scale-105" />
+          </div>
+          <div className="flex min-w-0 flex-col items-end justify-center py-4 pr-4 text-right lg:pr-8">
             <h2 className="text-sm leading-[19px] font-bold md:text-lg md:leading-6">{p.title}</h2>
             <p className="mt-3 text-xs leading-[19px] text-sand md:text-sm md:leading-6">{p.text}</p>
             <Button asChild size="sm" className="mt-3 h-[31px] px-4">
               <Link to="/" search={p.search} hash="catalogo">
-                Explorar <ArrowRight aria-hidden />
+                Explorar <ArrowRight aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
             </Button>
           </div>
@@ -287,10 +406,34 @@ function Promos() {
 }
 
 const POSTS = [
-  { image: 'neon-vessel', date: '12 de setembro', read: '6 min', title: 'Como funciona a propriedade de NFTs', text: 'Aprenda a colecionar, negociar e verificar ativos digitais.' },
-  { image: 'emerald-ape', date: '13 de setembro', read: '2 min', title: '10 artistas digitais para acompanhar', text: 'Conheça criadores que moldam a cultura digital.' },
-  { image: 'sage-nomad', date: '15 de setembro', read: '3 min', title: 'Raridade, atributos e procedência', text: 'Entenda raridade, procedência, direitos autorais e utilidade.' },
-  { image: 'golden-beat', date: '15 de setembro', read: '2 min', title: 'Como proteger sua carteira', text: 'Proteja sua carteira, seus ativos e sua identidade.' },
+  {
+    image: 'neon-vessel',
+    date: '12 de setembro',
+    read: '6 min',
+    title: 'Como funciona a propriedade de NFTs',
+    text: 'Aprenda a colecionar, negociar e verificar ativos digitais.',
+  },
+  {
+    image: 'emerald-ape',
+    date: '13 de setembro',
+    read: '2 min',
+    title: '10 artistas digitais para acompanhar',
+    text: 'Conheça criadores que moldam a cultura digital.',
+  },
+  {
+    image: 'sage-nomad',
+    date: '15 de setembro',
+    read: '3 min',
+    title: 'Raridade, atributos e procedência',
+    text: 'Entenda raridade, procedência, direitos autorais e utilidade.',
+  },
+  {
+    image: 'golden-beat',
+    date: '15 de setembro',
+    read: '2 min',
+    title: 'Como proteger sua carteira',
+    text: 'Proteja sua carteira, seus ativos e sua identidade.',
+  },
 ]
 
 function Blog() {
@@ -302,17 +445,20 @@ function Blog() {
       <p className="mt-2 text-xs text-sand">Histórias, guias e insights para colecionadores sobre o universo da propriedade digital.</p>
       <ul className="mt-8 grid grid-cols-2 gap-4 text-left lg:grid-cols-4 lg:gap-[13px]">
         {POSTS.map((p) => (
-          <li key={p.title} className="bg-surface-card">
-            <article>
-              <NftImage image={p.image} alt="" sizes="(min-width: 1024px) 270px, 45vw" className="aspect-[270/195]" />
+          <li key={p.title} className="reveal">
+            <article className="group relative h-full overflow-hidden rounded-[8px] bg-surface-card transition-[transform,background-color,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:bg-surface-raised hover:shadow-[0_16px_32px_-16px_rgb(0_0_0/0.7)]">
+              <div className="overflow-hidden">
+                <NftImage image={p.image} alt="" sizes="(min-width: 1024px) 270px, 45vw" className="aspect-[270/195] transition-transform duration-700 ease-out group-hover:scale-105" />
+              </div>
               <div className="p-3 text-[10px] leading-4">
                 <p className="text-sand">
                   {p.date} | Leitura de {p.read}
                 </p>
                 <h3 className="mt-2 text-sm leading-[17px] font-bold">{p.title}</h3>
                 <p className="mt-2 text-sand">{p.text}</p>
-                <Link to="/em-breve" search={{ secao: 'Diário da Cunhagem' }} className="mt-2 inline-block font-bold text-highlight hover:underline" aria-label={`Ler mais: ${p.title}`}>
-                  Ler mais →
+                {/* stretched link: the whole card is the target, the label stays "Ler mais" */}
+                <Link to="/em-breve" search={{ secao: 'Diário da Cunhagem' }} className="mt-2 inline-flex items-center gap-1 font-bold text-highlight after:absolute after:inset-0" aria-label={`Ler mais: ${p.title}`}>
+                  Ler mais <ArrowRight aria-hidden className="size-3 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
               </div>
             </article>

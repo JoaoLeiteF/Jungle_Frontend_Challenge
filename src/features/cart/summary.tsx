@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 import { isApiError } from '@/api/client'
 import type { Quote } from '@/api/contracts'
 import { Skeleton } from '@/components/states'
@@ -49,7 +49,8 @@ export function CouponField({ compact }: { compact?: boolean }) {
           aria-describedby={error ? `${id}-error` : undefined}
           className={cn('h-10 min-w-0 flex-1 border border-line-soft bg-transparent px-2 text-xs placeholder:text-sand', compact ? 'rounded-full border-0' : 'rounded-l-[4px]')}
         />
-        <button type="submit" disabled={coupon.isPending || !code.trim()} className={cn('bg-brand px-5 font-bold text-ink hover:bg-brand-light disabled:opacity-60', compact ? 'rounded-full' : 'rounded-r-[4px]')}>
+        <button type="submit" disabled={coupon.isPending || !code.trim()} className={cn('inline-flex items-center gap-2 bg-brand px-5 font-bold text-ink transition-[background-color,transform] hover:bg-brand-light active:scale-[0.97] disabled:opacity-60', compact ? 'rounded-full' : 'rounded-r-[4px]')}>
+          {coupon.isPending && <Loader2 className="size-4 animate-spin" aria-hidden />}
           {coupon.isPending ? 'Aplicando…' : 'Aplicar'}
         </button>
       </div>

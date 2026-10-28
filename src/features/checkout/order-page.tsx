@@ -177,7 +177,7 @@ export function OrderPage() {
 
   if (order.isError && isApiError(order.error) && order.error.status === 404) return <NotFoundPage title="Pedido não encontrado" message="Não existe um pedido com este identificador." />
   if (order.isError && isApiError(order.error) && order.error.status === 403) return <NotFoundPage title="Acesso negado" message="Este pedido pertence a outra conta." />
-  if (order.isError && !order.data) return <ErrorState className="mt-10" onRetry={() => order.refetch()} />
+  if (order.isError && !order.data) return <ErrorState className="mt-10" onRetry={() => order.refetch()} retrying={order.isFetching} />
 
   return (
     <>

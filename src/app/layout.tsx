@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { Footer } from '@/components/footer'
@@ -26,6 +26,12 @@ export function RootLayout() {
   const { pathname } = useLocation()
   // Mobile auth screens are full-screen in the Figma (no chrome)
   const bare = pathname === '/login' || pathname === '/register'
+  // Fade between sections, never on the first paint (an opacity-0 start would delay LCP).
+  // Opacity only: a transform here would re-anchor the pages' position:fixed bars mid-fade.
+  const section = pathname.split('/')[1]
+  const [initial] = useState(section)
+  const [navigated, setNavigated] = useState(false)
+  if (!navigated && section !== initial) setNavigated(true)
   return (
     <>
       <a href="#conteudo" className="sr-only z-50 rounded bg-brand px-3 py-2 text-ink focus:not-sr-only focus:fixed focus:top-2 focus:left-2">
@@ -35,7 +41,9 @@ export function RootLayout() {
         <Header />
       </div>
       <main id="conteudo" tabIndex={-1} className="mx-auto flow-root min-h-[100dvh] w-full max-w-[1200px] px-4 pb-24 outline-none md:px-6 md:pb-0 xl:px-0">
-        <Outlet />
+        <div key={section} className={navigated ? 'animate-in fade-in duration-300 ease-out' : undefined}>
+          <Outlet />
+        </div>
       </main>
       <div className={bare ? 'max-md:hidden' : undefined}>
         <Footer />

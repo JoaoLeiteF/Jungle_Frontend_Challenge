@@ -135,7 +135,7 @@ function Purchase({ nft }: { nft: Nft }) {
         </div>
         <p className="text-xl font-bold text-highlight md:hidden">{formatEth(edition.priceEth)}</p>
         <div className="flex gap-2 max-md:w-full">
-          <Button onClick={() => buy(true)} disabled={soldOut || add.isPending} className="h-10 px-9 max-md:flex-1 max-md:rounded-full">
+          <Button onClick={() => buy(true)} disabled={soldOut} loading={add.isPending} className="h-10 px-9 max-md:flex-1 max-md:rounded-full">
             {allSoldOut ? 'ESGOTADO' : 'COMPRAR'}
           </Button>
           <Button variant="outline" size="icon-lg" className="rounded-full md:hidden" onClick={() => buy(false)} disabled={soldOut || add.isPending} aria-label="Adicionar ao carrinho">
@@ -209,7 +209,7 @@ export function NftPage() {
 
   if (query.isError && isApiError(query.error) && query.error.status === 404)
     return <NotFoundPage title="NFT não encontrado" message="Este NFT não existe ou foi retirado do mercado." />
-  if (query.isError && !nft) return <ErrorState className="mt-10" message={isApiError(query.error) ? query.error.message : undefined} onRetry={() => query.refetch()} />
+  if (query.isError && !nft) return <ErrorState className="mt-10" message={isApiError(query.error) ? query.error.message : undefined} onRetry={() => query.refetch()} retrying={query.isFetching} />
   if (!nft) return <DetailSkeleton />
 
   const price = nft.editions.find((e) => e.edition === 3)?.priceEth ?? nft.listPriceEth

@@ -86,7 +86,7 @@ function WalletForm({ role, wallet, template, onDone }: { role: Role; wallet?: W
         <Field label="E-mail" type="email" required error={errors.email} {...form.register('email')} />
         <Field label="Código de indicação (opcional)" error={errors.referralCode} {...form.register('referralCode')} />
       </div>
-      <Button type="submit" disabled={isSubmitting} className="h-[38px] w-fit px-4">
+      <Button type="submit" loading={isSubmitting} className="h-[38px] w-fit px-4">
         {isSubmitting ? 'Salvando…' : 'Salvar carteira'}
       </Button>
     </form>
@@ -98,7 +98,7 @@ export function WalletsPage() {
   const me = useMe() // new-wallet defaults come from the profile
   const [addingSecondary, setAddingSecondary] = useState(false)
   const [copyPrimary, setCopyPrimary] = useState(false)
-  if (wallets.isError || me.isError) return <ErrorState onRetry={() => (wallets.refetch(), me.refetch())} />
+  if (wallets.isError || me.isError) return <ErrorState onRetry={() => (wallets.refetch(), me.refetch())} retrying={wallets.isFetching || me.isFetching} />
   if (!wallets.data || !me.data) return <Skeleton className="h-96" />
   const primary = wallets.data.find((w) => w.role === 'primary')
   const secondary = wallets.data.find((w) => w.role === 'secondary')

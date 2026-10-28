@@ -1,5 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Eye, Heart } from 'lucide-react'
+import { Eye, Heart, Sparkles } from 'lucide-react'
 import type { Nft } from '@/api/contracts'
 import { useSession } from '@/app/session'
 import { Icon } from '@/components/icon'
@@ -39,16 +39,21 @@ const isRare = (nft: Nft) => nft.attributes.includes('Raro') || nft.attributes.i
 export function NftCard({ nft, priority }: { nft: Nft; priority?: boolean }) {
   const add = useAddToCart()
   const defaultEdition = nft.editions[2]!
-  const action = 'grid size-8 place-items-center rounded-md bg-ink/85 text-cream hover:bg-brand hover:text-ink'
+  const action = 'grid size-8 place-items-center rounded-md bg-ink/85 text-cream shadow-[0_2px_8px_rgb(0_0_0/0.35)] transition-[background-color,color,transform] duration-150 hover:bg-brand hover:text-ink active:scale-90 disabled:opacity-50'
   return (
-    <article className="group flex flex-col gap-3" aria-labelledby={`nft-${nft.id}`}>
-      <div className="relative rounded-sm bg-surface-card p-3 transition-colors group-hover:bg-surface-raised">
-        <Link to="/nft/$nftId" params={{ nftId: nft.id }} tabIndex={-1} aria-hidden>
-          <NftImage image={nft.image} alt="" priority={priority} className="rounded-card" />
+    <article className={cn('group flex flex-col gap-3', !priority && 'animate-in fade-in duration-500 ease-out')} aria-labelledby={`nft-${nft.id}`}>
+      <div className="relative rounded-sm bg-surface-card p-3 transition-[background-color,transform,box-shadow] duration-300 ease-out group-hover:-translate-y-1 group-hover:bg-surface-raised group-hover:shadow-[0_12px_24px_-12px_rgb(0_0_0/0.6)]">
+        <Link to="/nft/$nftId" params={{ nftId: nft.id }} tabIndex={-1} aria-hidden className="block overflow-hidden rounded-card">
+          <NftImage image={nft.image} alt="" priority={priority} className="transition-transform duration-500 ease-out group-hover:scale-105" />
         </Link>
-        {isRare(nft) && <span className="absolute top-3 left-3 bg-brand px-2 py-0.5 text-xs font-bold text-ink">RARO</span>}
+        {isRare(nft) && (
+          <span className="rare-badge absolute overflow-hidden top-5 left-5 inline-flex items-center gap-1 rounded-full bg-brand py-0.5 pr-2.5 pl-2 text-[11px] font-bold tracking-[0.08em] text-ink shadow-[0_2px_8px_rgb(0_0_0/0.4)]">
+            <Sparkles className="size-3" aria-hidden />
+            RARO
+          </span>
+        )}
         <FavoriteButton nft={nft} className={cn(action, 'absolute top-5 right-5 md:hidden')} />
-        <div className="absolute inset-x-0 bottom-5 flex justify-center gap-2 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-md:hidden">
+        <div className="absolute inset-x-0 bottom-5 flex translate-y-2 justify-center gap-2 opacity-0 transition-[opacity,transform] duration-300 ease-out group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 max-md:hidden">
           <button
             type="button"
             className={action}
@@ -66,7 +71,7 @@ export function NftCard({ nft, priority }: { nft: Nft; priority?: boolean }) {
       </div>
       <div>
         <h3 id={`nft-${nft.id}`} className="text-base">
-          <Link to="/nft/$nftId" params={{ nftId: nft.id }} className="hover:text-highlight focus-visible:text-highlight">
+          <Link to="/nft/$nftId" params={{ nftId: nft.id }} className="transition-colors hover:text-highlight focus-visible:text-highlight">
             {nft.name}
           </Link>
         </h3>
