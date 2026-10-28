@@ -93,7 +93,7 @@ são recortes delas. Os layers chamam-se `NFT Artwork NN` (genérico), então os
 
 | Arquivo | Hash da imagem no Figma | Personagem |
 | --- | --- | --- |
-| `public/images/nft/emerald-ape-{320,640,1254}.webp` | `8459204731e6…` | macaco marrom, óculos, jaqueta verde |
+| `public/images/nft/emerald-ape-{320,480,640,1254}.webp` | `8459204731e6…` | macaco marrom, óculos, jaqueta verde |
 | `public/images/nft/sage-nomad-*.webp` | `2986a7cb16d0…` | gorila, chapéu bucket, moletom roxo |
 | `public/images/nft/neon-vessel-*.webp` | `9df2ff42dd27…` | gorila preto, gola alta |
 | `public/images/nft/golden-beat-*.webp` | `87580f2def9a…` | macaco dourado, headphone |

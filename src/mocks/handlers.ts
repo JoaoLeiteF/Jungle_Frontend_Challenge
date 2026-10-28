@@ -16,6 +16,7 @@ import {
   type Nft,
   type Quote,
   type QuoteIssue,
+  PROVIDER_LABEL,
 } from '@/api/contracts'
 import { addEth, cmpEth, fromWei, mulEth, pctEth, subEth, toWei } from '@/lib/eth'
 import { COUPONS, collectionLabel, db, hashPassword, networkLabel, nextId, persist, resetDb, reviewsFor, type DbCart, type DbOrder, type DbUser } from './db'
@@ -23,6 +24,7 @@ import { disconnectUser, emitNftUpdated, emitOrderUpdated } from './realtime'
 import { failure, is, latency, scenario, sessionTtlMs, setScenario, SCENARIOS, type ScenarioName } from './scenarios'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
+const EXPLORER: Record<string, string> = { ethereum: 'https://etherscan.io', polygon: 'https://polygonscan.com', solana: 'https://solscan.io' }
 
 // ---------- plumbing ----------
 class HttpError extends Error {
@@ -310,7 +312,7 @@ function settle(order: PendingOrder) {
     } else {
       order.status = 'confirmed'
       order.txHash = `0x${Array.from({ length: 8 }, (_, i) => (parseInt(hash(`${order.id}:${order.createdAt}:${i}`), 36) >>> 0).toString(16).padStart(8, '0')).join('')}`
-      order.explorerUrl = `https://etherscan.io/tx/${order.txHash}`
+      order.explorerUrl = `${EXPLORER[order.network]}/tx/${order.txHash}`
       for (const p of order.purchased) {
         const nft = db.nfts.find((n) => n.id === p.nftId)!
         nft.editions.find((e) => e.edition === p.edition)!.available -= p.quantity
@@ -642,9 +644,8 @@ export const handlers = [
     const { user, session } = requireUser(ctx.request)
     const wallet = db.wallets.find((w) => w.id === param(ctx, 'id') && w.userId === user.id) ?? fail(404, 'NOT_FOUND', 'Carteira não encontrada.')
     const { provider } = (await json(ctx)) as { provider?: string }
-    const names: Record<string, string> = { metamask: 'MetaMask', walletconnect: 'WalletConnect', coinbase: 'Coinbase Wallet' }
     if (provider !== wallet.provider)
-      fail(409, 'WALLET_REJECTED', `A carteira ${wallet.label} é ${names[wallet.provider]}: conecte por ${names[wallet.provider]}.`, { provider: 'Conector incompatível com a carteira.' })
+      fail(409, 'WALLET_REJECTED', `A carteira ${wallet.label} é ${PROVIDER_LABEL[wallet.provider]}: conecte por ${PROVIDER_LABEL[wallet.provider]}.`, { provider: 'Conector incompatível com a carteira.' })
     if (is('wallet-rejected')) fail(403, 'WALLET_REJECTED', 'A conexão foi recusada na carteira.')
     session.connectedWalletId = wallet.id
     return { ok: true, walletId: wallet.id, address: wallet.address }
@@ -672,4 +673,4 @@ export const handlers = [
   }),
 ]
 
-export { touchNft, findNft }
+export { touchNft }

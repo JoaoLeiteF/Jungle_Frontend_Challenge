@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { Footer } from '@/components/footer'
-import { Header } from '@/components/header'
-import { MobileNav } from '@/components/mobile-nav'
-import { MockPanel } from '@/components/mock-panel'
+import { Header } from './shell/header'
+import { MobileNav } from './shell/mobile-nav'
 import { TopLoader } from '@/components/top-loader'
 import { RealtimeBridge } from '@/realtime/bridge'
 import { useSession } from './session'
+
+// Demo tooling: only fetched when the simulated backend is on.
+const MockPanel = lazy(() => import('@/devtools/mock-panel').then((m) => ({ default: m.MockPanel })))
 
 const PRIVATE = ['/checkout', '/orders', '/profile']
 
@@ -50,7 +52,11 @@ export function RootLayout() {
       <Toaster position="bottom-right" closeButton richColors={false} />
       <RealtimeBridge />
       <SessionWatcher />
-      {import.meta.env.VITE_ENABLE_MOCKS !== 'false' && <MockPanel />}
+      {import.meta.env.VITE_ENABLE_MOCKS !== 'false' && (
+        <Suspense fallback={null}>
+          <MockPanel />
+        </Suspense>
+      )}
     </>
   )
 }

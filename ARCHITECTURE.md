@@ -196,7 +196,7 @@ conexão ao usuário e só entrega `order.updated` ao dono — eventos de uma se
 - Ícones: os SVGs exportados do Figma (`public/icons`) são usados via máscara CSS (`currentColor`); glifos que não
   exportei (coração, olho, lixeira, setas, menu da conta) vêm do `lucide-react`.
 - Imagens: os layers chamam-se `NFT Artwork NN`, então os arquivos usam o nome do personagem/NFT em kebab-case. O
-  design inteiro usa 4 imagens-fonte (1254 px); exportei os originais e gerei WebP 320/640/1254 para `srcset`.
+  design inteiro usa 4 imagens-fonte (1254 px); exportei os originais e gerei WebP 320/480/640/1254 para `srcset`.
 - Login social (Google/Facebook) usa as iniciais coloridas em vez dos logos oficiais.
 
 ## 10. Limitações conhecidas
@@ -210,4 +210,4 @@ conexão ao usuário e só entrega `order.updated` ao dono — eventos de uma se
 - Persistência do mock é por navegador (localStorage); duas abas compartilham o db mas não o estado em memória do
   servidor simulado (timers de liquidação rodam na aba que criou o pedido; a outra reconcilia via REST/polling).
 - `__mock/*` e `window.__kurioMock` existem no build de demonstração de propósito (o enunciado pede os mocks no deploy).
-- O "Ver no Etherscan" abre uma URL com hash simulado — o link existe, a transação não.
+- O "Ver no Etherscan" (Polygonscan/Solscan conforme a rede) abre uma URL com hash simulado — o link existe, a transação não.

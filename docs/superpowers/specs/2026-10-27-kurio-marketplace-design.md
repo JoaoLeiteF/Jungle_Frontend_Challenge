@@ -165,7 +165,7 @@ em `sessionStorage`), abre login; após login volta ao fluxo. Carrinho de visita
 - A11y: foco visível, foco preso em Dialog/Sheet (Radix), labels + `aria-describedby` de erro, `aria-live` para
   mutations e tempo real, contraste ≥ 4.5 (ajustes registrados), sem overflow a 320 px/zoom 200%.
 - Skeletons com shimmer e mesmas dimensões; `prefers-reduced-motion` desliga shimmer/transições.
-- Performance: imagens WebP com `srcset` (320/640/1254), `loading=lazy` fora da dobra, fonte Roboto Mono self-hosted
+- Performance: imagens WebP com `srcset` (320/480/640/1254), `loading=lazy` fora da dobra, fonte Roboto Mono self-hosted
   (`@fontsource-variable/roboto-mono`), code-splitting por rota, MSW carregado antes do render.
 
 ## 13. Fora do meu controle / deixado ao implementador

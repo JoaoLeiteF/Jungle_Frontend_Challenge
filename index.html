@@ -9,11 +9,21 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:title" content="Kurio — Marketplace de NFTs" />
     <meta property="og:description" content="Seja dono do futuro da arte digital." />
-    <meta property="og:image" content="/images/nft/emerald-ape-640.webp" />
+    <meta property="og:image" content="https://kurio-nft-marketplace-teal.vercel.app/images/nft/emerald-ape-640.webp" />
     <link rel="preload" as="image" href="/images/nft/emerald-ape-640.webp" imagesrcset="/images/nft/emerald-ape-320.webp 320w, /images/nft/emerald-ape-480.webp 480w, /images/nft/emerald-ape-640.webp 640w, /images/nft/emerald-ape-1254.webp 1254w" imagesizes="(min-width: 768px) 450px, 40vw" fetchpriority="high" />
+    <style>
+      html { background: #140d0a; }
+      .boot { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 16px; color: #f5f1eb; font: 700 20px/1 ui-monospace, 'Roboto Mono', monospace; letter-spacing: 0.3em; }
+      .boot-mark { width: 14px; height: 14px; background: #d28a4c; transform: rotate(45deg); }
+      .boot-bar { width: 96px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, #e89b55, transparent) 0 0 / 200% 100%; animation: boot 1.2s linear infinite; }
+      @keyframes boot { to { background-position: -200% 0; } }
+      @media (prefers-reduced-motion: reduce) { .boot-bar { animation: none; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" role="status" aria-label="Carregando a Kurio"><span class="boot-mark"></span><span>KURIO</span><span class="boot-bar"></span></div>
+    </div>
     <noscript>A Kurio precisa de JavaScript para funcionar.</noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>

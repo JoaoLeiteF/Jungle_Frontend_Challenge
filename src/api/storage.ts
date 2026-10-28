@@ -2,6 +2,8 @@
 // Everything else (cart contents, favorites…) lives behind the API.
 const TOKEN_KEY = 'kurio.session'
 const CART_KEY = 'kurio.cartId'
+/** Per-user checkout state in sessionStorage (attempt + form draft), owned by features/checkout. */
+export const CHECKOUT_KEYS = { attempt: 'kurio.checkout.attempt', draft: 'kurio.checkout.draft' } as const
 
 function safe<T>(fn: () => T, fallback: T): T {
   try {
@@ -25,4 +27,5 @@ export const storage = {
       return id
     }, 'guest_ephemeral'),
   resetCartId: () => safe(() => localStorage.removeItem(CART_KEY), undefined),
+  clearCheckout: () => safe(() => Object.values(CHECKOUT_KEYS).forEach((k) => sessionStorage.removeItem(k)), undefined),
 }

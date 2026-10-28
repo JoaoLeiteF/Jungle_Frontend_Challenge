@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate, useRouter } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { AlertTriangle, Check, CheckCircle2, ChevronLeft, Fingerprint, Loader2, LockKeyhole, PlugZap, ReceiptText, ShieldCheck, Unplug } from 'lucide-react'
+import { toast } from 'sonner'
 import { isApiError } from '@/api/client'
-import { buyerSchema, NETWORKS, WALLET_PROVIDERS, type Buyer, type Network, type Quote, type Wallet, type WalletProvider } from '@/api/contracts'
+import { buyerSchema, NETWORK_LABEL, NETWORKS, PROVIDER_LABEL, WALLET_PROVIDERS, type Buyer, type Network, type Quote, type Wallet, type WalletProvider } from '@/api/contracts'
 import { useSession } from '@/app/session'
 import { Field, FormAlert, inputClass } from '@/components/field'
 import { NftImage } from '@/components/nft-image'
@@ -15,13 +16,11 @@ import { useMe, useWallets } from '@/features/account/queries'
 import { useCart, useQuote } from '@/features/cart/queries'
 import { CouponField, QuoteIssues, QuoteTotals } from '@/features/cart/summary'
 import { formatEth } from '@/lib/eth'
-import { cn } from '@/lib/utils'
+import { useGoBack } from '@/lib/use-go-back'
+import { cn, shortAddress } from '@/lib/utils'
 import { attempts, draft } from './attempt'
 import { useConnectWallet, useCreateOrder, useDisconnectWallet } from './queries'
 
-export const PROVIDER_LABEL: Record<WalletProvider, string> = { walletconnect: 'WalletConnect', metamask: 'MetaMask', coinbase: 'Coinbase Wallet' }
-export const NETWORK_LABEL: Record<Network, string> = { ethereum: 'Ethereum', polygon: 'Polygon', solana: 'Solana' }
-const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`
 
 type Connection = { state: 'idle' } | { state: 'connecting' } | { state: 'connected'; walletId: string } | { state: 'rejected'; message: string }
 
@@ -106,7 +105,7 @@ function WalletPicker({ wallets, selected, onSelect }: { wallets: Wallet[]; sele
               <span className="block font-bold">
                 {w.label} <span className="font-normal text-sand">· {w.role === 'primary' ? 'principal' : 'secundária'}</span>
               </span>
-              <span className="block text-sand">{w.ensName ?? short(w.address)}</span>
+              <span className="block text-sand">{w.ensName ?? shortAddress(w.address)}</span>
               <span className="block text-sand">Rede {NETWORK_LABEL[w.network]}</span>
             </span>
           </label>
@@ -172,7 +171,7 @@ function ReviewDialog({
         )}
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="text-sand">Carteira</dt>
-          <dd>{wallet ? `${wallet.label} · ${PROVIDER_LABEL[wallet.provider]} · ${short(wallet.address)}` : '—'}</dd>
+          <dd>{wallet ? `${wallet.label} · ${PROVIDER_LABEL[wallet.provider]} · ${shortAddress(wallet.address)}` : '—'}</dd>
           <dt className="text-sand">Rede</dt>
           <dd>{NETWORK_LABEL[network]}</dd>
           <dt className="text-sand">Colecionador</dt>
@@ -206,7 +205,7 @@ export function CheckoutPage() {
   const s = useSession()
   const userId = s.status === 'authenticated' ? s.user.id : ''
   const navigate = useNavigate()
-  const router = useRouter()
+  const goBack = useGoBack()
   const me = useMe()
   const walletsQ = useWallets()
   const cart = useCart()
@@ -234,13 +233,13 @@ export function CheckoutPage() {
   useEffect(() => {
     if (prefilled.current || !me.data) return
     prefilled.current = true
-    const saved = draft.get<Buyer>()
+    const saved = draft.get<Buyer>(userId)
     form.reset(saved ?? { displayName: me.data.displayName, username: me.data.username, email: me.data.email, note: '' })
-  }, [me.data, form])
+  }, [me.data, form, userId])
   useEffect(() => {
-    const sub = form.watch((v) => draft.set(v))
+    const sub = form.watch((v) => draft.set(userId, v))
     return () => sub.unsubscribe()
-  }, [form])
+  }, [form, userId])
 
   const selectWallet = (id: string) => {
     if (connection.state === 'connected') disconnect.mutate(connection.walletId)
@@ -261,6 +260,7 @@ export function CheckoutPage() {
     setRecovering(true)
     create.mutate(previous.body, {
       onSuccess: (order) => navigate({ to: '/orders/$orderId', params: { orderId: order.id }, replace: true }),
+      onError: (e) => toast.error('Não foi possível retomar a compra anterior.', { description: isApiError(e) ? e.message : 'Revise o pedido e confirme novamente.' }),
       onSettled: () => setRecovering(false),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -349,7 +349,7 @@ export function CheckoutPage() {
   return (
     <div>
       <div className="flex items-center gap-4 py-4 md:hidden">
-        <button type="button" onClick={() => router.history.back()} aria-label="Voltar" className="grid size-9 place-items-center rounded-full bg-surface-card">
+        <button type="button" onClick={goBack} aria-label="Voltar" className="grid size-9 place-items-center rounded-full bg-surface-card">
           <ChevronLeft aria-hidden />
         </button>
         <h1 className="text-xl font-bold">Pagamento com carteira</h1>

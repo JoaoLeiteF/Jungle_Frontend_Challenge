@@ -1,12 +1,11 @@
-import { useEffect, useId, useState } from 'react'
+import { useId, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { NETWORKS, WALLET_PROVIDERS, walletInputSchema, type Wallet, type WalletInput } from '@/api/contracts'
+import { NETWORK_LABEL, NETWORKS, PROVIDER_LABEL, WALLET_PROVIDERS, walletInputSchema, type Wallet, type WalletInput } from '@/api/contracts'
 import { applyApiErrors, Field, FormAlert, inputClass } from '@/components/field'
 import { ErrorState, Skeleton } from '@/components/states'
 import { Button } from '@/components/ui/button'
-import { NETWORK_LABEL, PROVIDER_LABEL } from '@/features/checkout/checkout-page'
 import { cn } from '@/lib/utils'
 import { useMe, useSaveWallet, useWallets } from './queries'
 
@@ -43,10 +42,8 @@ function WalletForm({ role, wallet, template, onDone }: { role: Role; wallet?: W
   const me = useMe()
   const [error, setError] = useState<string | null>(null)
   const empty: WalletInput = { role, label: role === 'primary' ? 'Principal' : 'Reserva', provider: 'metamask', network: 'ethereum', address: '', ensName: '', ownerName: me.data?.displayName ?? '', email: me.data?.email ?? '', referralCode: '' }
-  const form = useForm<WalletInput>({ resolver: zodResolver(walletInputSchema), defaultValues: wallet ? toInput(wallet) : empty })
-  useEffect(() => {
-    if (template) form.reset({ ...template, role, label: form.getValues('label'), address: '' })
-  }, [template, role, form])
+  // The parent remounts this form (key) when the copy-primary choice changes, so the template is read once.
+  const form = useForm<WalletInput>({ resolver: zodResolver(walletInputSchema), defaultValues: wallet ? toInput(wallet) : template ? { ...template, role, label: empty.label, address: '' } : empty })
 
   const submit = form.handleSubmit(async (values) => {
     setError(null)
@@ -149,7 +146,7 @@ export function WalletsPage() {
         </div>
         {(secondary || addingSecondary) && (
           <WalletForm
-            key={secondary?.id ?? 'new-secondary'}
+            key={secondary?.id ?? (copyPrimary ? 'new-secondary-copy' : 'new-secondary')}
             role="secondary"
             wallet={secondary}
             template={copyPrimary && primary && !secondary ? toInput(primary) : undefined}

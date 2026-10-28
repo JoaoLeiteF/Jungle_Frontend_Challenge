@@ -35,7 +35,9 @@ npm run audit:lighthouse  # LHCI, 3 runs per page/profile, config in lighthouse/
   import inside `RealtimeBridge` — a static import anywhere in the app graph silently bypasses the socket mock.
 - `tough-cookie` is aliased to a stub (`src/mocks/tough-cookie-stub.ts`) to keep MSW small; the mock API is token-based.
 - **Layers**: `src/api/` (Axios instance + zod contracts shared with the mocks; every response is schema-parsed) →
-  `src/features/*/queries.ts` (TanStack Query options/mutations) → components. `src/app/session.ts` is an external
+  `src/features/*/queries.ts` (TanStack Query options/mutations) → components. `src/components/` is leaf UI with no
+  business deps; the app shell that reads session/cart lives in `src/app/shell/`; the mock panel is demo tooling in
+  `src/devtools/`, lazy-loaded only when mocks are on (it may log in the seed user and fill the cart through the API). `src/app/session.ts` is an external
   store (useSyncExternalStore) so router guards, the Axios 401 interceptor and the socket share one session.
 - **Query keys are scoped** (`src/app/query.ts`): public `['nfts', …]`, private `['u', userId, …]`, guest
   `['guest', cartId, …]`. Logout/expiry/user switch removes `['u']` and `['guest']` — keep new private data under `['u']`.
@@ -55,6 +57,6 @@ npm run audit:lighthouse  # LHCI, 3 runs per page/profile, config in lighthouse/
   `accent` is a background token, don't confuse them. Font is Roboto Mono everywhere.
 - shadcn/ui components are in `src/components/ui/` (restyled). Figma SVG icons are in `public/icons/` and rendered with
   `<Icon name>` (CSS mask, `currentColor`); other glyphs use `lucide-react`.
-- Raster art: 4 sources in `public/images/nft/<name>-{320,640,1254}.webp`, always rendered through `<NftImage>` (srcset).
+- Raster art: 4 sources in `public/images/nft/<name>-{320,480,640,1254}.webp`, always rendered through `<NftImage>` (srcset).
 - Mock scenarios: `?scenario=<name>`, the floating Mock panel, or `window.__kurioMock` (used by Playwright).
   Seed users: `ana@kurio.test` / `bruno@kurio.test`, password `Kurio@123`.

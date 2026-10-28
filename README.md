@@ -154,11 +154,13 @@ publicado; acesso direto e refresh em qualquer rota funcionam.
 ```
 src/
   api/        contratos zod, cliente Axios, endpoints
-  app/        router, sessão, QueryClient, layout
+  app/        router, sessão, QueryClient, layout; shell/ (header, navegação mobile)
   features/   catalog, nft, cart, checkout, auth, account, misc
   realtime/   socket.io-client + gate de eventos
   mocks/      db + seed, handlers REST, servidor Socket.IO, cenários
-  components/ UI compartilhada e shadcn/ui
+  devtools/   painel de cenários do mock (carregado só com os mocks ligados)
+  components/ UI compartilhada sem regra de negócio e shadcn/ui
+  lib/        ETH em BigInt, utilitários e hooks genéricos
 e2e/          Playwright
 lighthouse/   configuração, relatórios e resumo
 docs/         enunciado, Figma, SDD

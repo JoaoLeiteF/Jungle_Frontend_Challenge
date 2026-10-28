@@ -281,9 +281,8 @@ export const quoteSchema = z.object({
 export type Quote = z.infer<typeof quoteSchema>
 
 // ---------- orders ----------
-export const ORDER_STATUSES = ['pending', 'confirmed', 'rejected'] as const
+const ORDER_STATUSES = ['pending', 'confirmed', 'rejected'] as const
 export const orderStatusSchema = z.enum(ORDER_STATUSES)
-export type OrderStatus = z.infer<typeof orderStatusSchema>
 
 export const buyerSchema = z.object({
   displayName: z.string().trim().min(2, 'Informe o nome de exibição'),
@@ -345,3 +344,7 @@ export const orderUpdatedSchema = z.object({
 export type NftUpdatedEvent = z.infer<typeof nftUpdatedSchema>
 export type OrderUpdatedEvent = z.infer<typeof orderUpdatedSchema>
 export type RealtimeEvent = NftUpdatedEvent | OrderUpdatedEvent
+
+// ---------- display labels (shared by the UI and the simulated backend) ----------
+export const NETWORK_LABEL: Record<Network, string> = { ethereum: 'Ethereum', polygon: 'Polygon', solana: 'Solana' }
+export const PROVIDER_LABEL: Record<WalletProvider, string> = { walletconnect: 'WalletConnect', metamask: 'MetaMask', coinbase: 'Coinbase Wallet' }

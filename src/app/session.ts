@@ -31,7 +31,10 @@ function clearPrivate() {
 
 async function adopt(session: Session) {
   const previous = state.status === 'authenticated' ? state.user.id : null
-  if (previous && previous !== session.user.id) clearPrivate()
+  if (previous && previous !== session.user.id) {
+    clearPrivate()
+    storage.clearCheckout()
+  }
   storage.setToken(session.token)
   // Keep what the visitor put in the cart: merge the guest cart into the account, then start a fresh guest cart.
   const guestCartId = storage.getCartId()
@@ -83,6 +86,7 @@ export const session = {
     }
     storage.setToken(null)
     clearPrivate()
+    storage.clearCheckout()
     set({ status: 'anonymous', user: null })
   },
   expire(code: ErrorCode) {

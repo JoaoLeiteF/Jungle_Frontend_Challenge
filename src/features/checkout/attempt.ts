@@ -1,9 +1,10 @@
 // One checkout attempt = one Idempotency-Key + the exact body sent with it. Kept in sessionStorage so a
 // double click, a timeout retry or a page refresh replays the *same* attempt and recovers the same order.
 import type { CreateOrderInput } from '@/api/contracts'
+import { CHECKOUT_KEYS } from '@/api/storage'
 
-const KEY = 'kurio.checkout.attempt'
-const DRAFT = 'kurio.checkout.draft'
+const KEY = CHECKOUT_KEYS.attempt
+const DRAFT = CHECKOUT_KEYS.draft
 
 export interface Attempt {
   userId: string
@@ -47,9 +48,13 @@ export const attempts = {
   clear: () => write(KEY, null),
 }
 
-/** Form draft survives a session expiry → login → return to checkout. */
+/** Form draft survives a session expiry → login → return to checkout, for the same user only. */
 export const draft = {
-  get: <T>() => read<T>(DRAFT),
-  set: (v: unknown) => write(DRAFT, v),
+  get<T>(userId: string): T | null {
+    const saved = read<{ userId: string; value: T }>(DRAFT)
+    if (saved && saved.userId !== userId) write(DRAFT, null)
+    return saved?.userId === userId ? saved.value : null
+  },
+  set: (userId: string, value: unknown) => write(DRAFT, { userId, value }),
   clear: () => write(DRAFT, null),
 }

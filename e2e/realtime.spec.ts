@@ -55,9 +55,11 @@ test.describe('tempo real (Socket.IO)', () => {
   test('queda de conexão com pedido pendente: retoma o mesmo pedido após reconectar e recarregar', async ({ page }) => {
     await readyToConfirm(page)
     await openReview(page)
+    // the socket goes down before the order exists, so its settlement (2.5 s later) always happens unseen
+    await mock(page, 'outage', 6000)
     await page.getByRole('dialog').getByRole('button', { name: 'Confirmar compra' }).click()
     await expect(page.getByText(/Aguardando confirmação/)).toBeVisible()
-    await mock(page, 'outage', 4000) // settlement event fires while the socket is down
+    await page.reload() // leave and come back while the order is still pending
     await expect(page.getByText('Seus NFTs agora estão na sua carteira')).toBeVisible({ timeout: 15_000 })
     await page.reload()
     await expect(page.getByText('Seus NFTs agora estão na sua carteira')).toBeVisible()

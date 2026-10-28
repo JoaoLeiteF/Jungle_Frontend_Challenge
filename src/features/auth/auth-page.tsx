@@ -8,7 +8,7 @@ import { session } from '@/app/session'
 import { applyApiErrors, Field, FormAlert } from '@/components/field'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
-import { Hero } from '@/features/catalog/home-page'
+import { Hero } from '@/features/catalog/hero'
 import { cn } from '@/lib/utils'
 
 type Mode = 'login' | 'register'
@@ -24,7 +24,7 @@ function useIsDesktop() {
 function useFinish() {
   const navigate = useNavigate()
   const { redirect } = useSearch({ strict: false }) as { redirect?: string }
-  return () => navigate({ to: redirect && redirect.startsWith('/') && !redirect.startsWith('/login') ? redirect : '/', replace: true })
+  return () => navigate({ to: redirect && /^\/(?!\/)/.test(redirect) && !redirect.startsWith('/login') ? redirect : '/', replace: true })
 }
 
 function SocialButtons() {

@@ -63,7 +63,6 @@ export const api = {
     create: (body: CreateOrderInput, idempotencyKey: string) =>
       request(orderSchema, { method: 'POST', url: '/orders', data: body, headers: { 'Idempotency-Key': idempotencyKey } }),
     get: (id: string, { signal }: Opts = {}) => request(orderSchema, { url: `/orders/${encodeURIComponent(id)}`, signal }),
-    list: ({ signal }: Opts = {}) => request(z.object({ items: z.array(orderSchema) }), { url: '/orders', signal }),
   },
   me: {
     get: ({ signal }: Opts = {}) => request(userSchema, { url: '/me', signal }),

@@ -2,20 +2,20 @@
 // orders so REST handlers and socket events always read the same truth. Persisted to localStorage so
 // refresh keeps the scenario; reset() restores the deterministic seed.
 import type { Collection, Edition, Network, Nft, Order, Quote, User, Wallet, WalletProvider } from '@/api/contracts'
-import { COLLECTIONS } from '@/api/contracts'
+import { COLLECTIONS, NETWORK_LABEL } from '@/api/contracts'
 import { fromWei, toWei } from '@/lib/eth'
 
 export interface DbUser extends User {
   passwordHash: string
   salt: string
 }
-export interface DbSession {
+interface DbSession {
   token: string
   userId: string
   expiresAt: number
   connectedWalletId?: string | null
 }
-export interface DbCartItem {
+interface DbCartItem {
   id: string
   nftId: string
   edition: number
@@ -27,11 +27,11 @@ export interface DbCart {
   couponCode: string | null
   updatedAt: string
 }
-export interface DbQuote extends Quote {
+interface DbQuote extends Quote {
   cartId: string
   userId: string
 }
-export interface DbIdempotency {
+interface DbIdempotency {
   key: string
   userId: string
   bodyHash: string
@@ -62,8 +62,8 @@ export const COUPONS: Record<string, { percentOff: number; expiresAt: string }> 
   EXPIRED5: { percentOff: 5, expiresAt: '2024-01-01T00:00:00Z' },
 }
 
-export const SEED_PASSWORD = 'Kurio@123'
-export const SEED_USERS = [
+const SEED_PASSWORD = 'Kurio@123'
+const SEED_USERS = [
   { id: 'u_ana', email: 'ana@kurio.test', username: 'ana.souza', displayName: 'Ana Souza', ensName: 'ana', referralCode: 'ANA2026' },
   { id: 'u_bruno', email: 'bruno@kurio.test', username: 'bruno.lima', displayName: 'Bruno Lima', ensName: null, referralCode: null },
 ] as const
@@ -111,8 +111,7 @@ const COLLECTION_NAMES: Record<Collection, string> = {
   utilidade: 'Utilidade',
 }
 export const collectionLabel = (c: Collection) => COLLECTION_NAMES[c]
-const NETWORK_NAMES: Record<Network, string> = { ethereum: 'Ethereum', polygon: 'Polygon', solana: 'Solana' }
-export const networkLabel = (n: Network) => NETWORK_NAMES[n]
+export const networkLabel = (n: Network) => NETWORK_LABEL[n]
 
 // The first nine reproduce the Figma catalog page one-to-one.
 const FIGMA_FIRST: { art: ArtKey; name: string; token: string; price: string; compareAt?: string }[] = [

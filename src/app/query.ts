@@ -14,7 +14,6 @@ export const qk = {
   cart: (scope: Scope) => [...scope, 'cart'] as const,
   quote: (scope: Scope) => [...scope, 'quote'] as const,
   favorites: (userId: string) => ['u', userId, 'favorites'] as const,
-  orders: (userId: string) => ['u', userId, 'orders'] as const,
   order: (userId: string, id: string) => ['u', userId, 'orders', id] as const,
   me: (userId: string) => ['u', userId, 'me'] as const,
   wallets: (userId: string) => ['u', userId, 'wallets'] as const,

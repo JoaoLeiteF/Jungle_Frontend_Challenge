@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getRouteApi, Link, useNavigate, useRouter } from '@tanstack/react-router'
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronLeft, Search, Star } from 'lucide-react'
 import { isApiError } from '@/api/client'
-import type { Nft } from '@/api/contracts'
+import { NETWORK_LABEL, type Nft } from '@/api/contracts'
 import { Icon } from '@/components/icon'
 import { NftImage } from '@/components/nft-image'
 import { QuantityStepper } from '@/components/quantity-stepper'
@@ -17,7 +17,8 @@ import { catalogQuery, nftQuery } from '@/features/catalog/queries'
 import { NotFoundPage } from '@/features/misc/not-found'
 import { LivePrice } from '@/components/live-price'
 import { formatEth } from '@/lib/eth'
-import { cn } from '@/lib/utils'
+import { useGoBack } from '@/lib/use-go-back'
+import { cn, shortAddress } from '@/lib/utils'
 
 const route = getRouteApi('/nft/$nftId')
 
@@ -88,11 +89,11 @@ function Gallery({ nft }: { nft: Nft }) {
   )
 }
 
-function Purchase({ nft }: { nft: Nft }) {
+const defaultEdition = (nft: Nft) => (nft.editions.find((e) => e.edition === 3 && e.available > 0) ?? nft.editions.find((e) => e.available > 0))?.edition ?? 3
+
+function Purchase({ nft, editionId, setEditionId }: { nft: Nft; editionId: number; setEditionId: (edition: number) => void }) {
   const navigate = useNavigate()
   const add = useAddToCart()
-  const firstAvailable = nft.editions.find((e) => e.edition === 3 && e.available > 0) ?? nft.editions.find((e) => e.available > 0)
-  const [editionId, setEditionId] = useState(firstAvailable?.edition ?? 3)
   const edition = nft.editions.find((e) => e.edition === editionId)!
   const limit = Math.min(edition.available, edition.maxPerOrder)
   const [wanted, setQty] = useState(1)
@@ -215,20 +216,22 @@ function DetailSkeleton() {
 
 export function NftPage() {
   const { nftId } = route.useParams()
-  const router = useRouter()
+  const goBack = useGoBack()
   const query = useQuery(nftQuery(nftId))
   const nft = query.data
+  const [pick, setPick] = useState<{ nftId: string; edition: number } | null>(null)
 
   if (query.isError && isApiError(query.error) && query.error.status === 404)
     return <NotFoundPage title="NFT não encontrado" message="Este NFT não existe ou foi retirado do mercado." />
   if (query.isError && !nft) return <ErrorState className="mt-10" message={isApiError(query.error) ? query.error.message : undefined} onRetry={() => query.refetch()} retrying={query.isFetching} />
   if (!nft) return <DetailSkeleton />
 
-  const price = nft.editions.find((e) => e.edition === 3)?.priceEth ?? nft.listPriceEth
+  const editionId = pick?.nftId === nft.id ? pick.edition : defaultEdition(nft)
+  const price = nft.editions.find((e) => e.edition === editionId)?.priceEth ?? nft.listPriceEth
   return (
     <article aria-labelledby="nft-title">
       <div className="flex items-center justify-between py-4 md:hidden">
-        <button type="button" onClick={() => router.history.back()} aria-label="Voltar" className="grid size-9 place-items-center rounded-full bg-surface-card">
+        <button type="button" onClick={goBack} aria-label="Voltar" className="grid size-9 place-items-center rounded-full bg-surface-card">
           <ChevronLeft aria-hidden />
         </button>
         <FavoriteButton nft={nft} className="grid size-9 place-items-center rounded-full bg-surface-card text-brand" />
@@ -268,7 +271,7 @@ export function NftPage() {
             </h2>
             <p className="mt-2 text-sm leading-6 text-sand">{nft.description}</p>
           </section>
-          <Purchase key={nft.id} nft={nft} />
+          <Purchase key={nft.id} nft={nft} editionId={editionId} setEditionId={(edition) => setPick({ nftId: nft.id, edition })} />
           <dl className="flex flex-col gap-2 text-sm text-sand">
             <div className="flex gap-1">
               <dt>ID do token:</dt>
@@ -318,7 +321,7 @@ export function NftPage() {
           <dl className="flex flex-col gap-3">
             <div>
               <dt className="font-bold text-cream">Rede:</dt>
-              <dd>Cunhado na {nft.network === 'ethereum' ? 'Ethereum' : nft.network === 'polygon' ? 'Polygon' : 'Solana'} com procedência imutável e metadados armazenados no IPFS.</dd>
+              <dd>Cunhado na {NETWORK_LABEL[nft.network]} com procedência imutável e metadados armazenados no IPFS.</dd>
             </div>
             <div>
               <dt className="font-bold text-cream">Contrato:</dt>
@@ -327,7 +330,7 @@ export function NftPage() {
             <div>
               <dt className="font-bold text-cream">Direitos autorais:</dt>
               <dd>
-                {nft.contractAddress.slice(0, 6)}…{nft.contractAddress.slice(-4)} • Contrato inteligente ERC-721 verificado.
+                {shortAddress(nft.contractAddress)} • Contrato inteligente ERC-721 verificado.
               </dd>
             </div>
           </dl>

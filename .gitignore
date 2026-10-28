@@ -15,3 +15,6 @@ playwright-report/
 blob-report/
 .lighthouseci/
 lighthouse/reports/tmp/
+
+# personal research notes, not part of the delivery
+docs/challenge/robsoncezario.md

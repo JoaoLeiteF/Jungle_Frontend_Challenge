@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export type FigmaIcon = 'search' | 'shop' | 'cart' | 'user' | 'arrow-down' | 'message' | 'x' | 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube' | 'thank-you'
+export type FigmaIcon = 'search' | 'shop' | 'cart' | 'user' | 'message' | 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube' | 'thank-you'
 
 export function Icon({ name, className }: { name: FigmaIcon; className?: string }) {
   return (

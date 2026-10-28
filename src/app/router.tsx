@@ -22,7 +22,7 @@ const list = <T extends z.ZodType>(item: T) =>
     .optional()
     .transform((v) => (v ? v.split(',').filter((x) => item.safeParse(x).success).join(',') || undefined : undefined))
     .catch(undefined)
-export const catalogSearchSchema = z.object({
+const catalogSearchSchema = z.object({
   q: z.string().trim().max(80).optional().catch(undefined),
   collections: list(collectionSchema),
   networks: list(networkSchema),
@@ -34,7 +34,7 @@ export const catalogSearchSchema = z.object({
 })
 export type CatalogSearch = z.infer<typeof catalogSearchSchema>
 
-const redirectSearch = z.object({ redirect: z.string().startsWith('/').optional().catch(undefined) })
+const redirectSearch = z.object({ redirect: z.string().regex(/^\/(?!\/)/).optional().catch(undefined) })
 
 async function requireAuth({ location }: { location: { href: string } }) {
   await session.ready()

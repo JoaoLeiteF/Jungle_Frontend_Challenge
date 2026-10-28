@@ -3,7 +3,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { Loader2, XCircle } from 'lucide-react'
 import { isApiError } from '@/api/client'
-import type { Order } from '@/api/contracts'
+import { NETWORK_LABEL, PROVIDER_LABEL, type Order } from '@/api/contracts'
+import { shortAddress } from '@/lib/utils'
+
+const EXPLORER_LABEL = { ethereum: 'Etherscan', polygon: 'Polygonscan', solana: 'Solscan' } as const
 import { qk } from '@/app/query'
 import { useScope } from '@/app/session'
 import { Icon } from '@/components/icon'
@@ -12,14 +15,11 @@ import { ErrorState, Skeleton } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { NotFoundPage } from '@/features/misc/not-found'
-import { realtimeStatus } from '@/realtime/bridge'
 import { formatEth } from '@/lib/eth'
 import { attempts, draft } from './attempt'
-import { NETWORK_LABEL, PROVIDER_LABEL } from './checkout-page'
 import { useOrder } from './queries'
 
 const route = getRouteApi('/orders/$orderId')
-const short = (h: string) => `${h.slice(0, 6)}…${h.slice(-4)}`
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 const date = (iso: string) => {
   const d = new Date(iso)
@@ -32,7 +32,7 @@ function Receipt({ order }: { order: Order }) {
       <dl className="grid grid-cols-2 gap-y-3 border-y border-brand px-6 py-3 text-xs sm:grid-cols-4 sm:divide-x sm:divide-brand">
         <div className="sm:pr-3">
           <dt className="font-bold text-sand">ID da transação</dt>
-          <dd className="text-sand">{order.txHash ? short(order.txHash) : short(order.id.padEnd(10, '·'))}</dd>
+          <dd className="text-sand">{order.txHash ? shortAddress(order.txHash) : shortAddress(order.id.padEnd(10, '·'))}</dd>
         </div>
         <div className="sm:px-3">
           <dt className="text-sand">Data</dt>
@@ -137,7 +137,7 @@ function OrderCard({ order }: { order: Order }) {
         {order.explorerUrl && (
           <Button asChild className="h-12 px-4 text-base">
             <a href={order.explorerUrl} target="_blank" rel="noopener noreferrer">
-              Ver no Etherscan
+              Ver no {EXPLORER_LABEL[order.network]}
             </a>
           </Button>
         )}
@@ -162,15 +162,6 @@ export function OrderPage() {
       qc.invalidateQueries({ queryKey: qk.cart(scope) })
     }
   }, [status, qc, scope])
-
-  useEffect(() => {
-    const unsubscribe = realtimeStatus.subscribe((s) => {
-      if (s === 'connected' && status === 'pending') order.refetch()
-    })
-    return () => {
-      unsubscribe()
-    }
-  }, [status, order])
 
   if (order.isError && isApiError(order.error) && order.error.status === 404) return <NotFoundPage title="Pedido não encontrado" message="Não existe um pedido com este identificador." />
   if (order.isError && isApiError(order.error) && order.error.status === 403) return <NotFoundPage title="Acesso negado" message="Este pedido pertence a outra conta." />

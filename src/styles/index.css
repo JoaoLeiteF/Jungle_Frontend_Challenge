@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* Roboto Mono (OFL) self-hosted from public/fonts so index.html can preload it before first paint */
+/* Roboto Mono (OFL) self-hosted from public/fonts (latin + latin-ext subsets, font-display: swap) */
 @font-face {
   font-family: 'Roboto Mono Variable';
   font-style: normal;

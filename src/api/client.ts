@@ -55,9 +55,8 @@ http.interceptors.response.use(undefined, (error: unknown) => {
   const status = error.response.status
   // Not our API answering (a proxy page, a bare 404): treat it as unreachable so queries retry.
   if (!body?.error) return Promise.reject(new ApiError(0, 'NETWORK', 'Sem conexão com o servidor.'))
-  const code = body?.error?.code ?? (status >= 500 ? 'INTERNAL' : 'VALIDATION')
-  const apiError = new ApiError(status, code, body?.error?.message ?? 'Erro inesperado.', body?.error?.fields, body?.error?.details)
-  if (status === 401 && storage.getToken()) onUnauthorized(code)
+  const apiError = new ApiError(status, body.error.code, body.error.message, body.error.fields, body.error.details)
+  if (status === 401 && storage.getToken()) onUnauthorized(body.error.code)
   return Promise.reject(apiError)
 })
 

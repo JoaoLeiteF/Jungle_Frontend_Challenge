@@ -1,19 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useRouter } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { ChevronLeft, Trash2 } from 'lucide-react'
 import { isApiError } from '@/api/client'
 import type { CartItem } from '@/api/contracts'
+import { useGoBack } from '@/lib/use-go-back'
 import { NftImage } from '@/components/nft-image'
 import { QuantityStepper } from '@/components/quantity-stepper'
 import { EmptyState, ErrorState, Skeleton } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { NftCard, NftCardSkeleton } from '@/features/catalog/nft-card'
 import { catalogQuery } from '@/features/catalog/queries'
-import { formatEth, mulEth } from '@/lib/eth'
+import { formatEth } from '@/lib/eth'
 import { useCart, useQuote, useRemoveItem, useUpdateQuantity } from './queries'
 import { CouponField, QuoteIssues, QuoteTotals } from './summary'
 
-function Line({ item }: { item: CartItem }) {
+function Line({ item, lineTotalEth }: { item: CartItem; lineTotalEth?: string }) {
   const update = useUpdateQuantity()
   const remove = useRemoveItem()
   const limit = Math.min(item.available, item.maxPerOrder)
@@ -55,7 +56,7 @@ function Line({ item }: { item: CartItem }) {
       </div>
       <p className="font-bold text-highlight max-md:hidden">
         <span className="sr-only">Total da linha: </span>
-        {formatEth(mulEth(item.unitPriceEth, item.quantity))}
+        {lineTotalEth ? formatEth(lineTotalEth) : '…'}
       </p>
       <button type="button" onClick={() => remove.mutate({ itemId: item.id, name: item.nft.name })} disabled={remove.isPending} aria-label={`Remover ${item.nft.name} do carrinho`} className="justify-self-center text-sand hover:text-danger max-md:hidden">
         <Trash2 className="size-5" aria-hidden />
@@ -81,7 +82,7 @@ function AlsoViewed() {
 }
 
 export function CartPage() {
-  const router = useRouter()
+  const goBack = useGoBack()
   const cart = useCart()
   const quote = useQuote()
   const items = cart.data?.items ?? []
@@ -90,7 +91,7 @@ export function CartPage() {
   return (
     <div>
       <div className="flex items-center gap-4 py-4 md:hidden">
-        <button type="button" onClick={() => router.history.back()} aria-label="Voltar" className="grid size-9 place-items-center rounded-full bg-surface-card">
+        <button type="button" onClick={goBack} aria-label="Voltar" className="grid size-9 place-items-center rounded-full bg-surface-card">
           <ChevronLeft aria-hidden />
         </button>
         <h1 className="flex-1 text-center text-xl font-bold">Carrinho de NFTs</h1>
@@ -128,7 +129,7 @@ export function CartPage() {
             </div>
             <ul className="mt-3 flex flex-col gap-3" aria-label="Itens do carrinho">
               {items.map((item) => (
-                <Line key={item.id} item={item} />
+                <Line key={item.id} item={item} lineTotalEth={quote.data?.items.find((q) => q.itemId === item.id)?.lineTotalEth} />
               ))}
             </ul>
           </div>

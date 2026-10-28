@@ -8,15 +8,6 @@ import { createEventGate } from './gate'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'wss://realtime.kurio.mock'
 
-export type RealtimeStatus = 'connecting' | 'connected' | 'reconnecting'
-let status: RealtimeStatus = 'connecting'
-const statusListeners = new Set<(s: RealtimeStatus) => void>()
-const setStatus = (s: RealtimeStatus) => {
-  status = s
-  statusListeners.forEach((l) => l(s))
-}
-export const realtimeStatus = { get: () => status, subscribe: (l: (s: RealtimeStatus) => void) => (statusListeners.add(l), () => statusListeners.delete(l)) }
-
 function applyNft(event: NftUpdatedEvent) {
   const patch = (nft: Nft): Nft => (nft.id === event.resource.id && nft.version < event.version ? { ...nft, ...event.data, version: event.version } : nft)
   queryClient.setQueryData<Nft>(qk.nft(event.resource.id), (old) => (old ? patch(old) : old))
@@ -42,7 +33,6 @@ function applyOrder(event: OrderUpdatedEvent) {
   queryClient.setQueryData<Order>(qk.order(s.user.id, event.resource.id), (old) =>
     old && old.version < event.version ? { ...old, ...event.data, version: event.version, updatedAt: event.occurredAt } : old,
   )
-  queryClient.invalidateQueries({ queryKey: qk.orders(s.user.id) })
   if (event.data.status === 'confirmed') queryClient.invalidateQueries({ queryKey: qk.cart(['u', s.user.id]) })
 }
 
@@ -62,7 +52,6 @@ export function RealtimeBridge() {
     return () => {
       disposed = true
       cleanup()
-      setStatus('connecting')
     }
   }, [token, loading])
 
@@ -75,12 +64,9 @@ function connect(io: typeof import('socket.io-client').io, token: string | null)
   let connectedOnce = false
 
   socket.on('connect', () => {
-    setStatus('connected')
     if (connectedOnce) queryClient.invalidateQueries({ type: 'active' })
     connectedOnce = true
   })
-  socket.on('disconnect', () => setStatus('reconnecting'))
-  socket.on('connect_error', () => setStatus('reconnecting'))
   socket.on('nft.updated', (raw: unknown) => {
     const parsed = nftUpdatedSchema.safeParse(raw)
     if (!parsed.success) return

@@ -1,0 +1,22 @@
+# Kurio — Marketplace de NFTs
+
+> Kurio é uma demonstração de marketplace de NFTs (desafio de frontend da Jungle Gaming). Catálogo, detalhe, carrinho, pagamento com carteira, pedidos e conta funcionam de ponta a ponta sobre um backend simulado no navegador (MSW: REST + Socket.IO). Nenhum valor é cobrado e nenhuma carteira real é usada.
+
+Interface em português do Brasil. Preços em ETH. Usuários de demonstração: `ana@kurio.test` e `bruno@kurio.test`, senha `Kurio@123`.
+
+## Páginas
+
+- [Início e catálogo](https://kurio-nft-marketplace-teal.vercel.app/): destaques, busca, filtros por coleção, rede e preço, ordenação e paginação (estado na URL)
+- [Detalhe de um NFT](https://kurio-nft-marketplace-teal.vercel.app/nft/emerald-ape-042): edições, disponibilidade, quantidade, favoritos e itens da coleção
+- [Carrinho](https://kurio-nft-marketplace-teal.vercel.app/cart): itens, cupom e cotação calculada pelo servidor
+- [Pagamento](https://kurio-nft-marketplace-teal.vercel.app/checkout): requer login; carteira conectada, revisão e confirmação idempotente
+- [Entrar](https://kurio-nft-marketplace-teal.vercel.app/login) e [criar conta](https://kurio-nft-marketplace-teal.vercel.app/register)
+
+## Documentação
+
+- [README](https://github.com/JoaoLeiteF/Jungle_Frontend_Challenge/blob/main/README.md): setup, credenciais, cenários do mock e fluxos de falha
+- [Arquitetura](https://github.com/JoaoLeiteF/Jungle_Frontend_Challenge/blob/main/ARCHITECTURE.md): contratos, decisões e limitações
+
+## Optional
+
+- [Enunciado do desafio](https://github.com/JoaoLeiteF/Jungle_Frontend_Challenge/blob/main/docs/challenge/README.md)

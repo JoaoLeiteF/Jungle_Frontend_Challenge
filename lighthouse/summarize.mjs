@@ -14,7 +14,8 @@ for (const profile of ['mobile', 'desktop']) {
   const dir = join(root, profile)
   if (!existsSync(dir)) continue
   const runs = readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('manifest')).map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')))
-  const byPage = Object.groupBy(runs, (r) => new URL(r.finalDisplayedUrl ?? r.finalUrl).pathname)
+  const byPage = {}
+  for (const r of runs) (byPage[new URL(r.finalDisplayedUrl ?? r.finalUrl).pathname] ??= []).push(r)
   for (const [page, rs] of Object.entries(byPage)) {
     meta ??= { lighthouse: rs[0].lighthouseVersion, chrome: rs[0].environment?.hostUserAgent, benchmark: rs[0].environment?.benchmarkIndex }
     const cat = (k) => Math.round(median(rs.map((r) => r.categories[k].score)) * 100)

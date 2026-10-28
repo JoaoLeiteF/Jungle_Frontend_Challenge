@@ -42,13 +42,14 @@ export function useCreateOrder() {
     },
     onSuccess: (order) => qc.setQueryData(qk.order(userId, order.id), order),
     onError: (e) => {
-      // A stale quote comes back with the fresh one: show it immediately and drop the old attempt.
+      // A stale quote comes back with the fresh one: show it immediately.
       if (isApiError(e) && e.code === 'QUOTE_STALE') {
         const fresh = quoteSchema.safeParse((e.details as { quote?: unknown } | undefined)?.quote)
         if (fresh.success) qc.setQueriesData<Quote>({ queryKey: qk.quote(scope) }, () => fresh.data)
         qc.invalidateQueries({ queryKey: qk.cart(scope) })
-        attempts.clear()
       }
+      // Only an attempt that may exist on the server (timeout, lost connection) is worth replaying later.
+      if (!isApiError(e) || !e.transient) attempts.clear()
     },
   })
 }

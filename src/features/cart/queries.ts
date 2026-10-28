@@ -12,6 +12,10 @@ export function useCart() {
   return useQuery({ queryKey: qk.cart(scope), queryFn: ({ signal }) => api.cart.get({ signal }), enabled: ready, staleTime: 10_000 })
 }
 
+export function useCartCount() {
+  return useCart().data?.items.reduce((n, i) => n + i.quantity, 0) ?? 0
+}
+
 /** The API's quote is the source of truth for totals; it is never computed in the UI. */
 export function useQuote(enabled = true) {
   const scope = useScope()

@@ -8,7 +8,7 @@ test.describe('painel de cenários do mock', () => {
     const panel = page.getByRole('region', { name: 'Cenários de simulação' })
     await panel.getByRole('radio', { name: /offline/ }).click()
     await expect(page.getByText('Cenário “offline” ativado')).toBeVisible()
-    await expect(page.getByRole('button', { name: /Abrir painel de cenários.*offline/ }).or(panel)).toBeVisible()
+    await expect(panel.getByRole('radio', { name: /offline/ })).toBeChecked()
 
     // the control endpoints never go through the failure gate: the panel still answers while "offline"
     await page.reload()
@@ -53,7 +53,7 @@ test.describe('painel de cenários do mock', () => {
     await page.getByRole('button', { name: /Abrir painel de cenários/ }).click()
     await page.getByRole('region', { name: 'Cenários de simulação' }).getByRole('radio', { name: /slow/ }).click()
     await expect(page.getByText('Cenário “slow” ativado')).toBeVisible()
-    await expect(page.getByText('Something went wrong')).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Algo deu errado' })).toHaveCount(0)
     expect(errors).toEqual([])
   })
 })

@@ -1,13 +1,12 @@
 import { Link, useLocation } from '@tanstack/react-router'
 import { Heart, Home, Search } from 'lucide-react'
-import { useCart } from '@/features/cart/queries'
+import { useCartCount } from '@/features/cart/queries'
 import { cn } from '@/lib/utils'
-import { Icon } from './icon'
+import { Icon } from '@/components/icon'
 
 export function MobileNav() {
   const { pathname } = useLocation()
-  const cart = useCart()
-  const count = cart.data?.items.reduce((n, i) => n + i.quantity, 0) ?? 0
+  const count = useCartCount()
   const item = (active: boolean) => cn('flex flex-1 flex-col items-center gap-1 py-2 text-[11px]', active ? 'text-highlight' : 'text-cream')
   return (
     <nav aria-label="Navegação inferior" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">

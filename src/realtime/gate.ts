@@ -16,9 +16,5 @@ export function createEventGate() {
       versions.set(key, event.version)
       return true
     },
-    reset() {
-      seen.clear()
-      versions.clear()
-    },
   }
 }

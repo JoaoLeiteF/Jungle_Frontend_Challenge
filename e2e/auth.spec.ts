@@ -1,4 +1,4 @@
-import { ANA, BRUNO, expect, isMobile, login, mock, open, test } from './fixtures'
+import { addToCart, ANA, BRUNO, expect, isMobile, login, mock, open, test } from './fixtures'
 
 test.describe('conta e sessão', () => {
   test('cadastro valida campos e trata conflito de e-mail', async ({ page }) => {
@@ -43,11 +43,32 @@ test.describe('conta e sessão', () => {
     await expect(page.getByRole('heading', { name: 'Carteira principal' })).toBeVisible()
   })
 
+  test('sessão expira no checkout: login devolve ao pagamento com o formulário preservado', async ({ page }) => {
+    await addToCart(page, 'emerald-ape-042')
+    await login(page, ANA, '/checkout')
+    await page.getByLabel('Observação do colecionador (opcional)').fill('entregar na carteira principal')
+    await mock(page, 'expireSessions')
+    await page.getByRole('button', { name: /^Conectar MetaMask/ }).click() // first authenticated call → 401
+    await expect(page).toHaveURL(/\/login\?redirect=%2Fcheckout/)
+    await page.getByLabel('E-mail', { exact: true }).fill(ANA.email)
+    await page.getByLabel('Senha', { exact: true }).fill(ANA.password)
+    await page.getByRole('button', { name: 'Entrar', exact: true }).click()
+    await expect(page).toHaveURL(/\/checkout$/)
+    await expect(page.getByLabel('Observação do colecionador (opcional)')).toHaveValue('entregar na carteira principal')
+  })
+
   test('logout e troca de usuário não vazam dados privados', async ({ page }) => {
-    await login(page, ANA, '/profile/favorites')
+    await addToCart(page, 'emerald-ape-042')
+    await login(page, ANA, '/checkout')
+    await page.getByLabel('Observação do colecionador (opcional)').fill('nota privada da Ana')
+    await open(page, '/profile/favorites')
     await expect(page.locator('main article')).toHaveCount(1) // Ana has Emerald Ape favorited in the seed
     await page.getByRole('navigation', { name: 'Minha conta' }).getByRole('button', { name: 'Sair' }).click()
     await expect(page).toHaveURL('/')
+    // nothing typed or saved for Ana's purchase may stay in the tab for the next person
+    const stored = await page.evaluate(() => JSON.stringify({ ...sessionStorage }))
+    expect(stored).not.toContain(ANA.email)
+    expect(stored).not.toContain('nota privada da Ana')
     await open(page, '/profile/favorites')
     await expect(page).toHaveURL(/\/login/) // private route after logout
     await page.getByLabel('E-mail', { exact: true }).fill(BRUNO.email)

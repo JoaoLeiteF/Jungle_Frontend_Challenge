@@ -113,7 +113,6 @@ export function outage(ms: number) {
   for (const p of peers) p.conn.client.close(1012, 'outage')
   setTimeout(() => (down = false), ms)
 }
-export const isDown = () => down
 /** Session ended server-side: drop that user's sockets so no event reaches a stale session. */
 export function disconnectUser(userId: string) {
   for (const p of peers) if (p.userId === userId) p.conn.client.close(1000, 'logout')

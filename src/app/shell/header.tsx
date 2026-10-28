@@ -4,9 +4,9 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { LogIn, LogOut, UserRound, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { session, useSession } from '@/app/session'
-import { useCart } from '@/features/cart/queries'
+import { useCartCount } from '@/features/cart/queries'
 import { cn } from '@/lib/utils'
-import { Icon } from './icon'
+import { Icon } from '@/components/icon'
 
 const NAV = [
   { label: 'Início', to: '/', match: (p: string, _q: string) => p === '/' },
@@ -15,9 +15,8 @@ const NAV = [
   { label: 'Aprenda', to: '/em-breve', search: { secao: 'Aprenda' }, match: (p: string, q: string) => p === '/em-breve' && q.includes('Aprenda') },
 ] as const
 
-export function CartBadgeLink({ className }: { className?: string }) {
-  const cart = useCart()
-  const count = cart.data?.items.reduce((n, i) => n + i.quantity, 0) ?? 0
+function CartBadgeLink({ className }: { className?: string }) {
+  const count = useCartCount()
   return (
     <Link to="/cart" className={cn('group/cart relative grid size-10 place-items-center rounded-md transition-colors hover:bg-surface-raised', className)} aria-label={`Carrinho, ${count} ${count === 1 ? 'item' : 'itens'}`}>
       <Icon name="cart" className="size-6 text-cream transition-transform duration-200 group-hover/cart:-translate-y-0.5" />

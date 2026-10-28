@@ -7,7 +7,7 @@ import {
 } from "lucide-react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
-export const TOAST_MS = 5000
+const TOAST_MS = 5000
 
 const Toaster = ({ ...props }: ToasterProps) => {
 
