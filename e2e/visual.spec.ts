@@ -15,9 +15,6 @@ async function settle(page: Page) {
 const masks = (page: Page) => [page.locator('[data-sonner-toaster]'), page.getByRole('button', { name: /painel de cenários/ })]
 
 test.describe('regressão visual', () => {
-  // Reduced motion pauses the hero autoplay, so the capture always shows the first slide.
-  test.use({ reducedMotion: 'reduce' })
-
   test('início', async ({ page }) => {
     await open(page, '/')
     await expect(page.locator('main article').first()).toBeVisible()

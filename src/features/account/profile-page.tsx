@@ -25,7 +25,7 @@ function ProfileForm() {
   const update = useUpdateProfile()
   const form = useForm<ProfileInput>({ resolver: zodResolver(profileInputSchema) })
   const [error, setError] = useState<string | null>(null)
-  const [avatar, setAvatar] = useState<string | null | undefined>(undefined) // undefined = untouched
+  const [avatar, setAvatar] = useState<string | null | undefined>(undefined)
   const [avatarError, setAvatarError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 

@@ -22,6 +22,8 @@ export default defineConfig({
     locale: 'pt-BR',
     timezoneId: 'America/Sao_Paulo',
     colorScheme: 'dark',
+    // Behavior specs, not motion: no smooth scroll, fades or hero autoplay stealing time or moving targets.
+    reducedMotion: 'reduce',
     serviceWorkers: 'allow', // MSW lives in a service worker
   },
   projects: [

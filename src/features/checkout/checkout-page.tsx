@@ -166,7 +166,6 @@ export function CheckoutPage() {
   const activeProvider = provider ?? wallet?.provider ?? 'metamask'
 
   const form = useForm<Buyer>({ resolver: zodResolver(buyerSchema), defaultValues: { displayName: '', username: '', email: '', note: '' } })
-  // prefill from the profile, unless a saved draft (e.g. after a session expiry) exists
   const prefilled = useRef(false)
   useEffect(() => {
     if (prefilled.current || !me.data) return
@@ -179,7 +178,6 @@ export function CheckoutPage() {
     return () => sub.unsubscribe()
   }, [form])
 
-  // switching wallet resets network/connector to that wallet and drops the previous connection
   const selectWallet = (id: string) => {
     if (connection.state === 'connected') disconnect.mutate(connection.walletId)
     setWalletId(id)
@@ -188,7 +186,6 @@ export function CheckoutPage() {
     setConnection({ state: 'idle' })
   }
 
-  // A previous attempt that never got its response (timeout + refresh): replay it to recover the order.
   useEffect(() => {
     if (!userId) return
     const previous = attempts.get(userId)
@@ -231,7 +228,7 @@ export function CheckoutPage() {
   function confirm() {
     if (!wallet || !quote.data) return
     setOrderError(null)
-    setReviewedVersion(quote.data.version) // what the user is confirming right now
+    setReviewedVersion(quote.data.version)
     create.mutate(
       { quoteId: quote.data.id, quoteVersion: quote.data.version, walletId: wallet.id, network: activeNetwork, buyer: form.getValues() },
       {
@@ -241,7 +238,6 @@ export function CheckoutPage() {
         },
         onError: (e) => {
           if (isApiError(e) && e.code === 'QUOTE_STALE') {
-            // keep the old reviewed version: the dialog now flags the change and asks for a new confirmation
             setOrderError('Preço, disponibilidade ou taxas mudaram. Revise o novo total e confirme novamente.')
             return
           }

@@ -77,7 +77,6 @@ export function QuoteIssues({ quote }: { quote?: Quote }) {
   )
 }
 
-/** Totals exactly as the API quoted them (strings → formatEth, no client math). */
 export function QuoteTotals({ quote, loading }: { quote?: Quote; loading?: boolean }) {
   if (!quote)
     return (

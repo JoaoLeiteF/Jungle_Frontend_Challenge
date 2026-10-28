@@ -2,7 +2,6 @@ import { cn } from '@/lib/utils'
 
 const WIDTHS = [320, 480, 640, 1254] as const
 
-/** Responsive NFT artwork from the 4 Figma sources (public/images/nft/<name>-<w>.webp). */
 export function NftImage({
   image,
   alt,

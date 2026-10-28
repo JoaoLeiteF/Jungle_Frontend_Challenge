@@ -95,7 +95,7 @@ function WalletForm({ role, wallet, template, onDone }: { role: Role; wallet?: W
 
 export function WalletsPage() {
   const wallets = useWallets()
-  const me = useMe() // new-wallet defaults come from the profile
+  const me = useMe()
   const [addingSecondary, setAddingSecondary] = useState(false)
   const [copyPrimary, setCopyPrimary] = useState(false)
   if (wallets.isError || me.isError) return <ErrorState onRetry={() => (wallets.refetch(), me.refetch())} retrying={wallets.isFetching || me.isFetching} />

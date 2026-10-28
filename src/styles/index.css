@@ -106,7 +106,7 @@
 
 @layer base {
   * { @apply border-border outline-ring/60; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
   body { @apply bg-ink text-cream font-mono antialiased; min-height: 100dvh; }
   :focus-visible { outline: 2px solid var(--color-highlight); outline-offset: 2px; }
   ::selection { background: var(--color-brand); color: var(--color-ink); }
@@ -133,13 +133,23 @@
   transform: translateX(120%);
 }
 
+/* Hero dots fill up while the autoplay counts down to the next slide. */
+.dot-progress { animation: dot-progress linear forwards; }
+@keyframes dot-progress {
+  from { transform: scaleX(0); }
+}
+
 /* Below-the-fold sections rise in as they scroll into view (native scroll timeline, no JS). */
 @keyframes reveal {
   from { opacity: 0; transform: translateY(24px); }
 }
+@keyframes reveal-x {
+  from { opacity: 0; transform: translateX(72px); }
+}
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .reveal { animation: reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 70%; }
+    .reveal-x { animation: reveal-x linear both; animation-timeline: view(); }
   }
 }
 

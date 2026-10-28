@@ -22,7 +22,6 @@ function applyNft(event: NftUpdatedEvent) {
   queryClient.setQueryData<Nft>(qk.nft(event.resource.id), (old) => (old ? patch(old) : old))
   queryClient.setQueriesData<CatalogPage>({ queryKey: qk.catalogAll }, (old) => (old ? { ...old, items: old.items.map(patch) } : old))
 
-  // Cart lines and the quote derive from the catalog: refresh them and tell the user if it matters to them.
   const scope = scopeOf(session.get())
   const cart = queryClient.getQueryData<Cart>(qk.cart(scope))
   const line = cart?.items.find((i) => i.nftId === event.resource.id)
@@ -39,7 +38,6 @@ function applyNft(event: NftUpdatedEvent) {
 
 function applyOrder(event: OrderUpdatedEvent) {
   const s = session.get()
-  // An event addressed to another account (e.g. from a previous session) must never touch this cache.
   if (s.status !== 'authenticated' || s.user.id !== event.userId) return
   queryClient.setQueryData<Order>(qk.order(s.user.id, event.resource.id), (old) =>
     old && old.version < event.version ? { ...old, ...event.data, version: event.version, updatedAt: event.occurredAt } : old,
@@ -48,7 +46,6 @@ function applyOrder(event: OrderUpdatedEvent) {
   if (event.data.status === 'confirmed') queryClient.invalidateQueries({ queryKey: qk.cart(['u', s.user.id]) })
 }
 
-/** Owns the socket for the current session: one connection per token, torn down on logout/switch. */
 export function RealtimeBridge() {
   const s = useSession()
   const token = s.status === 'authenticated' ? s.token : null
@@ -58,8 +55,6 @@ export function RealtimeBridge() {
     if (loading) return
     let disposed = false
     let cleanup = () => {}
-    // Imported here, not at module top: engine.io-client captures globalThis.WebSocket when it is
-    // evaluated, and this effect only runs after MSW has patched it (see main.tsx).
     import('socket.io-client').then(({ io }) => {
       if (disposed) return
       cleanup = connect(io, token)
@@ -81,7 +76,6 @@ function connect(io: typeof import('socket.io-client').io, token: string | null)
 
   socket.on('connect', () => {
     setStatus('connected')
-    // After an outage, events may have been missed: reconcile everything on screen with REST.
     if (connectedOnce) queryClient.invalidateQueries({ type: 'active' })
     connectedOnce = true
   })

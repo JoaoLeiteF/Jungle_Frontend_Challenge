@@ -8,7 +8,6 @@ const FEATURES = [
   { letter: 'D', title: 'Alertas de lançamentos', text: 'Receba calendários de cunhagem, novidades de listas de acesso e análises do mercado.' },
 ]
 
-// Out-of-scope destinations lead to an honest "Em breve" page instead of pretending to work.
 const soon = (secao: string) => ({ to: '/em-breve' as const, search: { secao } })
 const COLUMNS: { title: string; links: { label: string; link: { to: string; search?: Record<string, string> } }[] }[] = [
   {
@@ -49,7 +48,6 @@ function Newsletter() {
   return (
     <div className="flex flex-col gap-3">
       <h2 className="text-lg leading-4 font-bold">Antecipe-se ao próximo lançamento</h2>
-      {/* Newsletter is outside the evaluated scope: it validates locally and says so, without faking a subscription. */}
       <form
         className="mt-2 flex"
         onSubmit={(e) => {

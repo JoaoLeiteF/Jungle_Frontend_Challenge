@@ -15,8 +15,6 @@ interface RouterContext {
 
 const rootRoute = createRootRouteWithContext<RouterContext>()({ component: RootLayout, notFoundComponent: () => <NotFoundPage /> })
 
-// Catalog state lives in the URL. Lists are comma-separated so links stay readable and shareable;
-// anything invalid is dropped instead of breaking the page.
 const list = <T extends z.ZodType>(item: T) =>
   z
     .string()
@@ -37,7 +35,6 @@ export type CatalogSearch = z.infer<typeof catalogSearchSchema>
 
 const redirectSearch = z.object({ redirect: z.string().startsWith('/').optional().catch(undefined) })
 
-/** Private routes wait for the boot session check, then bounce anonymous visitors to login and back. */
 async function requireAuth({ location }: { location: { href: string } }) {
   await session.ready()
   if (session.get().status !== 'authenticated') throw redirect({ to: '/login', search: { redirect: location.href } })
@@ -47,8 +44,6 @@ const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   validateSearch: catalogSearchSchema,
-  // Not awaited: the request starts in parallel with the lazy chunk instead of after it, and the page
-  // renders its own skeleton meanwhile (no route-level pending screen).
   loaderDeps: ({ search }) => search,
   loader: ({ context, deps }) => void context.queryClient.prefetchQuery(catalogQuery(toCatalogQuery(deps))),
   component: lazyRouteComponent(() => import('@/features/catalog/home-page'), 'HomePage'),
@@ -116,7 +111,6 @@ export const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultPreload: 'intent',
-  // shown while a lazy route chunk or guard resolves (avoids a blank frame)
   defaultPendingComponent: () => (
     <div role="status" aria-label="Carregando página" className="mt-[68px] flex flex-col gap-4">
       <Skeleton className="h-8 w-1/3" />
@@ -124,7 +118,7 @@ export const router = createRouter({
     </div>
   ),
   defaultPendingMs: 150,
-  defaultPreloadStaleTime: 0, // Query owns caching
+  defaultPreloadStaleTime: 0,
   scrollRestoration: true,
 })
 

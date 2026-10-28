@@ -23,10 +23,9 @@ const short = (h: string) => `${h.slice(0, 6)}…${h.slice(-4)}`
 const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 const date = (iso: string) => {
   const d = new Date(iso)
-  return `${String(d.getDate()).padStart(2, '0')} ${MONTHS[d.getMonth()]}, ${d.getFullYear()}` // Figma: "29 Jul, 2026"
+  return `${String(d.getDate()).padStart(2, '0')} ${MONTHS[d.getMonth()]}, ${d.getFullYear()}`
 }
 
-/** Receipt = the order snapshot from the API. Catalog changes after purchase never alter these values. */
 function Receipt({ order }: { order: Order }) {
   return (
     <>
@@ -156,7 +155,6 @@ export function OrderPage() {
   const order = useOrder(orderId)
   const status = order.data?.status
 
-  // Terminal states end the checkout attempt; a confirmed one also refreshes the (now smaller) cart.
   useEffect(() => {
     if (status === 'confirmed' || status === 'rejected') {
       attempts.clear()
@@ -165,7 +163,6 @@ export function OrderPage() {
     }
   }, [status, qc, scope])
 
-  // Coming back online while pending: reconcile with REST right away.
   useEffect(() => {
     const unsubscribe = realtimeStatus.subscribe((s) => {
       if (s === 'connected' && status === 'pending') order.refetch()

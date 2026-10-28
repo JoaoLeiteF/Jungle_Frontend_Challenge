@@ -30,7 +30,6 @@ export function EmptyState({ title, children, className }: { title: string; chil
   )
 }
 
-/** Shown while a background refetch runs over already-rendered data. */
 export function RefreshingHint({ show }: { show: boolean }) {
   return (
     <span role="status" aria-live="polite" className={cn('text-xs text-sand transition-opacity', show ? 'opacity-100' : 'opacity-0')}>

@@ -46,7 +46,6 @@ function Button({
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
-    /** Shows a spinner inside the button and blocks repeat clicks (not for asChild). */
     loading?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"

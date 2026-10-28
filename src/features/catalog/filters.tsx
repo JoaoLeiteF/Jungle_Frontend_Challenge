@@ -21,7 +21,6 @@ function FacetList({ title, items, selected, onToggle }: { title: string; items:
     <fieldset>
       <legend className="mb-3 text-lg font-bold">{title}</legend>
       <ul className="flex flex-col gap-1">
-        {/* alphabetical: the Figma order was flagged as hard to scan */}
         {[...items]
           .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'))
           .map((f) => {
@@ -34,7 +33,6 @@ function FacetList({ title, items, selected, onToggle }: { title: string; items:
                   onClick={() => onToggle(f.value)}
                   className={cn('flex w-full items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-surface-raised', on ? 'font-bold text-highlight' : 'text-cream')}
                 >
-                  {/* selected = color + weight + check mark, never color alone */}
                   <span className="flex items-center gap-1.5">
                     {f.label}
                     {on && <span aria-hidden>✓</span>}
@@ -71,7 +69,6 @@ function PriceRange({ range, search, onApply }: { range: { min: string; max: str
         aria-label="Faixa de preço em ETH"
         className="my-4"
       />
-      {/* Sliders are imprecise on touch: typed bounds are the exact source of truth. */}
       <div className="flex items-end gap-2 text-sm">
         <label className="flex flex-1 flex-col gap-1" htmlFor={`${id}-min`}>
           Mín. (ETH)
@@ -116,7 +113,6 @@ export function Filters({ data, search, onChange }: { data?: CatalogPage; search
   return (
     <div className="flex flex-col gap-8">
       <FacetList title="Coleções" items={data.facets.collections} selected={search.collections} onToggle={(v) => onChange({ collections: toggleIn(search.collections, v) })} />
-      {/* keyed so the inputs re-sync when the URL (back/forward, clear) changes the bounds */}
       <PriceRange key={`${search.min}|${search.max}|${data.facets.priceRange.min}|${data.facets.priceRange.max}`} range={data.facets.priceRange} search={search} onApply={onChange} />
       <FacetList title="Rede" items={data.facets.networks} selected={search.networks} onToggle={(v) => onChange({ networks: toggleIn(search.networks, v) })} />
     </div>

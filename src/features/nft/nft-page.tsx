@@ -20,7 +20,6 @@ import { cn } from '@/lib/utils'
 
 const route = getRouteApi('/nft/$nftId')
 
-// The Figma gallery shows four views of the same artwork: we render them as framed crops.
 const VIEWS = [
   { label: 'Obra completa', style: {} },
   { label: 'Detalhe do rosto', style: { transform: 'scale(1.6)', transformOrigin: '50% 35%' } },
@@ -59,8 +58,19 @@ function Gallery({ nft }: { nft: Nft }) {
         ))}
       </div>
       <div className="relative min-w-0 flex-1 bg-surface-card p-3 md:p-5">
-        <div className="overflow-hidden rounded-[22px]">
-          <NftImage image={nft.image} alt={`${nft.name} — ${VIEWS[view]!.label.toLowerCase()}`} priority sizes="(min-width: 768px) 404px, 90vw" style={VIEWS[view]!.style} />
+        <div
+          className="group/lens overflow-hidden rounded-[22px] [@media(hover:hover)]:cursor-zoom-in"
+          onPointerMove={(e) => {
+            if (e.pointerType !== 'mouse') return
+            const r = e.currentTarget.getBoundingClientRect()
+            e.currentTarget.style.setProperty('--lens-x', `${((e.clientX - r.left) / r.width) * 100}%`)
+            e.currentTarget.style.setProperty('--lens-y', `${((e.clientY - r.top) / r.height) * 100}%`)
+          }}
+          onClick={() => setZoom(true)}
+        >
+          <div className="origin-[var(--lens-x,50%)_var(--lens-y,50%)] transition-transform duration-300 ease-out group-hover/lens:scale-[2.2]">
+            <NftImage image={nft.image} alt={`${nft.name} — ${VIEWS[view]!.label.toLowerCase()}`} priority sizes="(min-width: 768px) 640px, 90vw" style={VIEWS[view]!.style} />
+          </div>
         </div>
         <button type="button" onClick={() => setZoom(true)} aria-label="Ampliar imagem" className="absolute top-2 right-2 grid size-8 place-items-center rounded-full bg-ink text-cream hover:bg-brand hover:text-ink">
           <Search className="size-5" aria-hidden />
@@ -85,7 +95,6 @@ function Purchase({ nft }: { nft: Nft }) {
   const edition = nft.editions.find((e) => e.edition === editionId)!
   const limit = Math.min(edition.available, edition.maxPerOrder)
   const [wanted, setQty] = useState(1)
-  // live updates may shrink availability under the user: the quantity is always clamped to the current limit
   const qty = Math.max(1, Math.min(wanted, limit))
 
   const soldOut = edition.available === 0
@@ -162,8 +171,8 @@ function Related({ nft }: { nft: Nft }) {
       </h2>
       <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-[22px]">
         {items
-          ? items.map((n) => (
-              <li key={n.id}>
+          ? items.map((n, i) => (
+              <li key={n.id} className="reveal-x" style={{ animationRange: `entry ${i * 6}% cover ${32 + i * 6}%` }}>
                 <NftCard nft={n} />
               </li>
             ))
@@ -346,13 +355,23 @@ function Share({ nft }: { nft: Nft }) {
     { label: 'Twitter', icon: 'twitter' as const, href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}` },
   ]
   return (
-    <p className="flex items-center gap-3 text-sm font-bold">
-      Compartilhar este NFT:
-      {links.map((l) => (
-        <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer" aria-label={`Compartilhar no ${l.label} (abre em nova aba)`} className="hover:text-highlight">
-          <Icon name={l.icon} className={l.icon === 'message' ? 'size-4' : 'size-6'} />
-        </a>
-      ))}
-    </p>
+    <div className="flex items-center gap-3 text-sm font-bold">
+      <span>Compartilhar este NFT:</span>
+      <ul className="flex items-center gap-2">
+        {links.map((l) => (
+          <li key={l.label} className="flex">
+            <a
+              href={l.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Compartilhar no ${l.label} (abre em nova aba)`}
+              className="grid size-8 place-items-center rounded-full border border-line-soft text-cream transition-[background-color,border-color,color,transform] duration-200 hover:-translate-y-0.5 hover:border-brand hover:bg-brand hover:text-ink active:scale-95"
+            >
+              <Icon name={l.icon} className={l.icon === 'message' ? 'size-5' : 'size-[30px]'} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }

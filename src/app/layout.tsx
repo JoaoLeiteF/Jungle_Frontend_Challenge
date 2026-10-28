@@ -10,7 +10,6 @@ import { useSession } from './session'
 
 const PRIVATE = ['/checkout', '/orders', '/profile']
 
-/** When the session expires on a private screen, send the user to login and bring them back after. */
 function SessionWatcher() {
   const s = useSession()
   const location = useLocation()
@@ -24,10 +23,7 @@ function SessionWatcher() {
 
 export function RootLayout() {
   const { pathname } = useLocation()
-  // Mobile auth screens are full-screen in the Figma (no chrome)
   const bare = pathname === '/login' || pathname === '/register'
-  // Fade between sections, never on the first paint (an opacity-0 start would delay LCP).
-  // Opacity only: a transform here would re-anchor the pages' position:fixed bars mid-fade.
   const section = pathname.split('/')[1]
   const [initial] = useState(section)
   const [navigated, setNavigated] = useState(false)

@@ -15,7 +15,6 @@ type FieldProps = Omit<React.ComponentProps<'input'>, 'id'> & {
   hideLabel?: boolean
 }
 
-/** Label + input + error wired with aria-invalid/aria-describedby. Password fields get a show/hide toggle. */
 export function Field({ label, error, hint, required, hideLabel, className, type = 'text', ...input }: FieldProps) {
   const id = useId()
   const [show, setShow] = useState(false)
@@ -54,7 +53,6 @@ export function Field({ label, error, hint, required, hideLabel, className, type
   )
 }
 
-/** Copies API field errors (400/409 `fields`) onto the form; returns the general message for the banner. */
 export function applyApiErrors<T extends FieldValues>(form: UseFormReturn<T>, error: unknown): string {
   if (!isApiError(error)) return 'Erro inesperado. Tente novamente.'
   for (const [name, message] of Object.entries(error.fields ?? {})) form.setError(name as Path<T>, { type: 'server', message }, { shouldFocus: true })

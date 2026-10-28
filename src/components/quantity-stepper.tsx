@@ -1,7 +1,6 @@
 import { Minus, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-/** −/+ control from the Figma (round brand buttons). Minus is disabled at the minimum, plus at the limit. */
 export function QuantityStepper({
   value,
   max,

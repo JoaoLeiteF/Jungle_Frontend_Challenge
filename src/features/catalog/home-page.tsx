@@ -60,8 +60,6 @@ const AUTOPLAY_MS = 6000
 export function Hero() {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
-  // Off-screen art loads after first paint so it never competes with the LCP image. Text always
-  // renders: the track is as tall as its tallest slide, so mounting it late would shift the page.
   const [warm, setWarm] = useState(false)
   const touchX = useRef<number | null>(null)
   const go = (i: number) => setIndex((i + SLIDES.length) % SLIDES.length)
@@ -80,7 +78,7 @@ export function Hero() {
     <section
       aria-roledescription="carrossel"
       aria-label="Destaques"
-      className="relative mt-6 overflow-hidden rounded-[20px] bg-surface-card md:mt-0 md:rounded-none md:bg-transparent"
+      className="relative isolate mt-6 overflow-hidden rounded-[20px] bg-[radial-gradient(130%_110%_at_88%_8%,#5a3520_0%,#38220f_40%,#241612_78%)] before:absolute before:-top-24 before:-right-20 before:-z-10 before:size-72 before:rounded-full before:bg-brand/10 md:mt-0 md:rounded-none md:bg-none md:before:hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -111,25 +109,40 @@ export function Hero() {
                 active ? 'opacity-100' : 'opacity-0',
               )}
             >
-              <div className="md:pl-8">
+              <div className={cn('transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] md:pl-8', active ? 'translate-y-0' : 'translate-y-3')}>
                 <p className="text-xs font-medium tracking-[0.1em] md:text-sm">{slide.eyebrow}</p>
                 <Title className="mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:max-w-[600px] md:text-[43px] md:leading-[70px]">{slide.title}</Title>
                 <p className="mt-2 max-w-[520px] text-[11px] leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]">{slide.text}</p>
-                <Button asChild className="mt-3 h-[31px] px-4 text-sm md:mt-8 md:px-5 md:text-base">
+                <Button asChild className="mt-3 h-[31px] px-4 text-sm max-md:h-auto max-md:bg-transparent max-md:px-0 max-md:text-highlight max-md:hover:bg-transparent md:mt-8 md:px-5 md:text-base">
                   <Link to="/" search={slide.search} hash="catalogo">
-                    EXPLORAR
+                    EXPLORAR <ArrowRight aria-hidden className="md:hidden" />
                   </Link>
                 </Button>
               </div>
-              <div className="aspect-square w-full max-w-[450px] overflow-hidden rounded-[14px] md:rounded-hero">
-                {(i === 0 || warm) && (
-                  <NftImage
-                    image={slide.image}
-                    alt={`Arte em destaque: ${slide.title}`}
-                    priority={i === 0 || warm}
-                    sizes="(min-width: 768px) 450px, 40vw"
-                    className={cn('transition-transform duration-[1200ms] ease-out', active ? 'scale-100' : 'scale-105')}
-                  />
+              <div className="relative w-full max-w-[450px]">
+                <div className="aspect-square overflow-hidden rounded-[14px] shadow-[0_10px_24px_-10px_rgb(0_0_0/0.7)] md:rounded-hero md:shadow-none">
+                  {(i === 0 || warm) && (
+                    <NftImage
+                      image={slide.image}
+                      alt={`Arte em destaque: ${slide.title}`}
+                      priority={i === 0 || warm}
+                      sizes="(min-width: 768px) 450px, 40vw"
+                      className={cn('transition-transform duration-[1200ms] ease-out', active ? 'scale-100' : 'scale-105')}
+                    />
+                  )}
+                </div>
+                {warm && (
+                  <button
+                    type="button"
+                    onClick={() => go(i + 1)}
+                    aria-label={`Próximo destaque: ${SLIDES[(i + 1) % SLIDES.length]!.title}`}
+                    className={cn(
+                      'absolute -bottom-3 -left-4 w-[46%] overflow-hidden rounded-[10px] ring-2 ring-surface-card shadow-[0_6px_14px_-6px_rgb(0_0_0/0.8)] transition-[transform,opacity] delay-300 duration-500 ease-out active:scale-95 md:hidden',
+                      active ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
+                    )}
+                  >
+                    <NftImage image={SLIDES[(i + 1) % SLIDES.length]!.image} alt="" sizes="80px" />
+                  </button>
                 )}
               </div>
             </div>
@@ -139,7 +152,9 @@ export function Hero() {
       <div className="flex justify-center pb-2 md:absolute md:bottom-9 md:left-[52%] md:pb-0">
         {SLIDES.map((s, i) => (
           <button key={s.image} type="button" onClick={() => setIndex(i)} aria-label={`Destaque ${i + 1} de ${SLIDES.length}`} aria-current={i === index} className="group/dot grid h-6 min-w-6 place-items-center px-1">
-            <span aria-hidden className={cn('h-2.5 rounded-full border border-brand transition-all duration-500 ease-out', i === index ? 'w-6 bg-brand' : 'w-2.5 bg-brand/40 group-hover/dot:bg-brand/70')} />
+            <span aria-hidden className={cn('relative h-2.5 overflow-hidden rounded-full border border-brand transition-all duration-500 ease-out', i === index ? 'w-6 bg-brand/40' : 'w-2.5 bg-brand/40 group-hover/dot:bg-brand/70')}>
+              {i === index && <span key={index} className="dot-progress absolute inset-0 origin-left bg-brand" style={{ animationPlayState: paused ? 'paused' : 'running', animationDuration: `${AUTOPLAY_MS}ms` }} />}
+            </span>
           </button>
         ))}
       </div>
@@ -223,7 +238,6 @@ function Catalog() {
   const catalog = useQuery(catalogQuery(toCatalogQuery(search)))
   const data = catalog.data
 
-  // Any filter change restarts pagination; only explicit page moves keep it.
   const update = (patch: SearchPatch, keepPage = false) =>
     navigate({
       search: (prev) => ({
@@ -252,7 +266,6 @@ function Catalog() {
         </div>
       </aside>
       <div className="min-w-0">
-        {/* mobile/tablet: search + filters sheet (Figma mobile "Explorar coleções") */}
         <div className="mb-4 flex gap-2 lg:hidden">
           <form
             role="search"
@@ -456,7 +469,6 @@ function Blog() {
                 </p>
                 <h3 className="mt-2 text-sm leading-[17px] font-bold">{p.title}</h3>
                 <p className="mt-2 text-sand">{p.text}</p>
-                {/* stretched link: the whole card is the target, the label stays "Ler mais" */}
                 <Link to="/em-breve" search={{ secao: 'Diário da Cunhagem' }} className="mt-2 inline-flex items-center gap-1 font-bold text-highlight after:absolute after:inset-0" aria-label={`Ler mais: ${p.title}`}>
                   Ler mais <ArrowRight aria-hidden className="size-3 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
@@ -470,7 +482,6 @@ function Blog() {
 }
 
 export function HomePage() {
-  // honor #catalogo links coming from other pages
   useEffect(() => {
     if (location.hash === '#catalogo') document.getElementById('catalogo')?.scrollIntoView()
   }, [])

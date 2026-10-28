@@ -6,10 +6,6 @@ import { session } from '@/app/session'
 
 type Info = { scenario: string; available: Record<string, string> }
 
-/**
- * Demo/evaluation helper. Talks to the simulated backend only through its HTTP control endpoints
- * (/api/__mock/*) — the same network layer the app uses — so it can't shortcut the UI state.
- */
 export function MockPanel() {
   const [open, setOpen] = useState(false)
   const [info, setInfo] = useState<Info | null>(null)

@@ -4,7 +4,6 @@ import { useCart } from '@/features/cart/queries'
 import { cn } from '@/lib/utils'
 import { Icon } from './icon'
 
-/** Bottom tab bar from the mobile Figma frames (hidden from md up). */
 export function MobileNav() {
   const { pathname } = useLocation()
   const cart = useCart()
