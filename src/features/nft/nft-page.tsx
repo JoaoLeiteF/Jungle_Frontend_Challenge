@@ -43,7 +43,7 @@ function Gallery({ nft }: { nft: Nft }) {
   const [zoom, setZoom] = useState(false)
   return (
     <div className="flex flex-col-reverse gap-4 md:flex-row md:gap-7">
-      <div role="radiogroup" aria-label="Vistas da obra" className="flex gap-3 md:flex-col">
+      <div role="radiogroup" aria-label="Vistas da obra" className="grid grid-cols-4 gap-3 md:flex md:flex-col">
         {VIEWS.map((v, i) => (
           <button
             key={v.label}
@@ -52,13 +52,13 @@ function Gallery({ nft }: { nft: Nft }) {
             aria-checked={view === i}
             aria-label={v.label}
             onClick={() => setView(i)}
-            className={cn('size-[72px] overflow-hidden rounded-[10px] border-2 md:size-[100px]', view === i ? 'border-brand' : 'border-transparent')}
+            className={cn('aspect-square w-full max-w-[100px] overflow-hidden rounded-[10px] border-2 md:size-[100px]', view === i ? 'border-brand' : 'border-transparent')}
           >
             <NftImage image={nft.image} alt="" sizes="100px" style={v.style} />
           </button>
         ))}
       </div>
-      <div className="relative flex-1 bg-surface-card p-5">
+      <div className="relative min-w-0 flex-1 bg-surface-card p-3 md:p-5">
         <div className="overflow-hidden rounded-[22px]">
           <NftImage image={nft.image} alt={`${nft.name} — ${VIEWS[view]!.label.toLowerCase()}`} priority sizes="(min-width: 768px) 404px, 90vw" style={VIEWS[view]!.style} />
         </div>
@@ -179,8 +179,17 @@ function Related({ nft }: { nft: Nft }) {
 
 function DetailSkeleton() {
   return (
-    <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,572px)_1fr]" aria-label="Carregando NFT" role="status">
-      <Skeleton className="aspect-square w-full" />
+    <div className="mt-[68px] grid gap-8 md:grid-cols-[minmax(0,572px)_1fr]" aria-label="Carregando NFT" role="status">
+      <div className="flex flex-col-reverse gap-4 md:flex-row md:gap-7">
+        <div className="grid grid-cols-4 gap-3 md:flex md:flex-col">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="aspect-square w-full max-w-[100px] rounded-[10px] md:size-[100px]" />
+          ))}
+        </div>
+        <div className="flex-1 bg-surface-card p-5">
+          <Skeleton className="aspect-square w-full rounded-[22px]" />
+        </div>
+      </div>
       <div className="flex flex-col gap-4">
         <Skeleton className="h-8 w-2/3" />
         <Skeleton className="h-6 w-1/4" />
@@ -269,7 +278,7 @@ export function NftPage() {
       </div>
 
       <Tabs defaultValue="details" className="mt-16">
-        <TabsList className="h-auto w-full justify-start gap-6 rounded-none border-b border-line bg-transparent p-0">
+        <TabsList className="h-auto w-full flex-wrap justify-start gap-x-6 gap-y-2 rounded-none border-b border-line bg-transparent p-0">
           {[
             ['details', 'Detalhes do NFT'],
             ['reviews', `Avaliações de colecionadores (${nft.reviewCount})`],
@@ -277,7 +286,7 @@ export function NftPage() {
             <TabsTrigger
               key={v}
               value={v!}
-              className="flex-none rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-2 text-base data-[state=active]:border-highlight data-[state=active]:bg-transparent data-[state=active]:font-bold data-[state=active]:text-highlight data-[state=active]:shadow-none"
+              className="flex-none rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-2 text-left text-sm whitespace-normal md:text-base data-[state=active]:border-highlight data-[state=active]:bg-transparent data-[state=active]:font-bold data-[state=active]:text-highlight data-[state=active]:shadow-none"
             >
               {label}
             </TabsTrigger>

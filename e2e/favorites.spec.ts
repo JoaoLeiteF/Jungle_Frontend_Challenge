@@ -5,7 +5,8 @@ test.describe('favoritos', () => {
     await login(page, ANA)
     await open(page, '/nft/sage-nomad-009')
     await page.getByRole('button', { name: 'Favoritar', exact: true }).click()
-    await expect(page.getByRole('button', { name: 'Favoritado' })).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByRole('button', { name: 'Favoritado' })).toHaveAttribute('aria-pressed', 'true') // optimistic
+    await expect(page.getByText('Sage Nomad #009 adicionado aos favoritos.')).toBeVisible() // confirmed by the API
     await page.reload()
     await expect(page.getByRole('button', { name: 'Favoritado' })).toHaveAttribute('aria-pressed', 'true')
   })

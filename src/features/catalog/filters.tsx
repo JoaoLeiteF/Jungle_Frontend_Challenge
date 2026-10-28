@@ -34,9 +34,10 @@ function FacetList({ title, items, selected, onToggle }: { title: string; items:
                   onClick={() => onToggle(f.value)}
                   className={cn('flex w-full items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-surface-raised', on ? 'font-bold text-highlight' : 'text-cream')}
                 >
-                  <span className="flex items-center gap-2">
-                    <span aria-hidden className={cn('size-3 rounded-[3px] border', on ? 'border-highlight bg-highlight' : 'border-line-soft')} />
+                  {/* selected = color + weight + check mark, never color alone */}
+                  <span className="flex items-center gap-1.5">
                     {f.label}
+                    {on && <span aria-hidden>✓</span>}
                   </span>
                   <span className={cn('tabular-nums', on ? 'text-highlight' : 'text-brand')}>({f.count})</span>
                 </button>

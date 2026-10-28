@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowRight, ChevronRight, SlidersHorizontal } from 'lucide-react'
-import { SORTS, TABS, type CatalogQuery, type Sort, type Tab } from '@/api/contracts'
+import { SORTS, TABS, type Sort, type Tab } from '@/api/contracts'
 import { isApiError } from '@/api/client'
 import { Icon } from '@/components/icon'
 import { NftImage } from '@/components/nft-image'
@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { cn } from '@/lib/utils'
 import { Filters, type SearchPatch } from './filters'
 import { NftCard, NftCardSkeleton } from './nft-card'
-import { catalogQuery } from './queries'
+import { catalogQuery, toCatalogQuery } from './queries'
 
 const route = getRouteApi('/')
 
@@ -40,7 +40,7 @@ export function Hero() {
       <div className="grid grid-cols-[1fr_40%] items-center gap-3 p-4 md:grid-cols-[1fr_minmax(0,450px)] md:gap-10 md:p-0 md:py-6" aria-live="polite">
         <div className="md:pl-8">
           <p className="text-xs font-medium tracking-[0.1em] md:text-sm">{slide.eyebrow}</p>
-          <h1 className="mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:text-[43px] md:leading-[70px]">{slide.title}</h1>
+          <h1 className="mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:max-w-[600px] md:text-[43px] md:leading-[70px]">{slide.title}</h1>
           <p className="mt-2 max-w-[520px] text-[11px] leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]">{slide.text}</p>
           <Button asChild className="mt-3 h-[31px] px-4 text-sm md:mt-8 md:px-5 md:text-base">
             <Link to="/" search={slide.search} hash="catalogo">
@@ -52,7 +52,7 @@ export function Hero() {
           <NftImage image={slide.image} alt={`Arte em destaque: ${slide.title}`} priority={index === 0} sizes="(min-width: 768px) 450px, 40vw" className="rounded-[14px] md:rounded-hero" />
         </div>
       </div>
-      <div className="flex justify-center gap-2 pb-3 md:absolute md:bottom-10 md:left-[52%] md:pb-0">
+      <div className="flex justify-center pb-2 md:absolute md:bottom-9 md:left-[52%] md:pb-0">
         {SLIDES.map((s, i) => (
           <button
             key={s.image}
@@ -60,8 +60,10 @@ export function Hero() {
             onClick={() => setIndex(i)}
             aria-label={`Destaque ${i + 1} de ${SLIDES.length}`}
             aria-current={i === index}
-            className={cn('size-2.5 rounded-full border border-brand', i === index ? 'bg-brand' : 'bg-brand/40')}
-          />
+            className="grid size-6 place-items-center"
+          >
+            <span aria-hidden className={cn('size-2.5 rounded-full border border-brand', i === index ? 'bg-brand' : 'bg-brand/40')} />
+          </button>
         ))}
       </div>
     </section>
@@ -110,9 +112,11 @@ function Pagination({ page, pageCount, onPage }: { page: number; pageCount: numb
 
 function Featured() {
   return (
-    <Link to="/nft/$nftId" params={{ nftId: 'sage-nomad-009' }} className="group block bg-surface-card pt-4 hover:bg-surface-raised" aria-label="NFT em destaque: Sage Nomad #009, oferta limitada">
+    <Link to="/nft/$nftId" params={{ nftId: 'sage-nomad-009' }} className="group block bg-surface-card pt-4 hover:bg-surface-raised">
       <p className="px-4 text-lg font-bold tracking-wide text-highlight">NFT EM DESTAQUE</p>
-      <p className="px-4 pb-3 text-center font-bold">OFERTA LIMITADA</p>
+      <p className="px-4 pb-3 text-center font-bold">
+        OFERTA LIMITADA<span className="sr-only">: Sage Nomad #009</span>
+      </p>
       <NftImage image="sage-nomad" alt="" sizes="(min-width: 1024px) 310px, 90vw" className="aspect-[310/368] rounded-[22px] object-[50%_20%]" />
     </Link>
   )
@@ -122,18 +126,7 @@ function Catalog() {
   const search = route.useSearch()
   const navigate = useNavigate({ from: '/' })
   const topRef = useRef<HTMLHeadingElement>(null)
-  const query: CatalogQuery = {
-    q: search.q,
-    collections: search.collections?.split(',') as CatalogQuery['collections'],
-    networks: search.networks?.split(',') as CatalogQuery['networks'],
-    min: search.min,
-    max: search.max,
-    tab: search.tab,
-    sort: search.sort,
-    page: search.page ?? 1,
-    pageSize: 9,
-  }
-  const catalog = useQuery(catalogQuery(query))
+  const catalog = useQuery(catalogQuery(toCatalogQuery(search)))
   const data = catalog.data
 
   // Any filter change restarts pagination; only explicit page moves keep it.
@@ -146,7 +139,7 @@ function Catalog() {
 
   const filters = <Filters data={data} search={search} onChange={update} />
   return (
-    <section aria-labelledby="catalogo" className="grid gap-8 lg:grid-cols-[226px_1fr] lg:gap-[22px]">
+    <section aria-labelledby="catalogo" className="grid gap-8 lg:grid-cols-[310px_1fr] lg:gap-12">
       <h2 id="catalogo" ref={topRef} className="sr-only scroll-mt-24" tabIndex={-1}>
         Catálogo
       </h2>
@@ -276,11 +269,11 @@ function Promos() {
   return (
     <section aria-label="Promoções" className="grid gap-6 md:grid-cols-2 md:gap-[38px]">
       {items.map((p) => (
-        <article key={p.image} className="grid grid-cols-[minmax(0,156px)_1fr] items-center gap-4 bg-surface-card md:grid-cols-[156px_1fr]">
-          <NftImage image={p.image} alt="" sizes="156px" className="h-full object-cover" />
-          <div className="py-4 pr-4 text-right">
-            <h2 className="text-sm leading-[19px] font-bold md:text-base">{p.title}</h2>
-            <p className="mt-3 text-xs leading-[19px] text-sand">{p.text}</p>
+        <article key={p.image} className="grid grid-cols-[minmax(0,156px)_1fr] items-center gap-4 bg-surface-card lg:h-[250px] lg:grid-cols-[290px_1fr]">
+          <NftImage image={p.image} alt="" sizes="(min-width: 1024px) 290px, 156px" className="h-full rounded-[14px] object-cover" />
+          <div className="min-w-0 py-4 pr-4 text-right">
+            <h2 className="text-sm leading-[19px] font-bold md:text-lg md:leading-6">{p.title}</h2>
+            <p className="mt-3 text-xs leading-[19px] text-sand md:text-sm md:leading-6">{p.text}</p>
             <Button asChild size="sm" className="mt-3 h-[31px] px-4">
               <Link to="/" search={p.search} hash="catalogo">
                 Explorar <ArrowRight aria-hidden />

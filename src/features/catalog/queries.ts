@@ -5,6 +5,21 @@ import { api } from '@/api/endpoints'
 import { qk } from '@/app/query'
 import { useSession } from '@/app/session'
 
+/** URL search params (comma lists) → API query. Shared by the route loader and the page. */
+export function toCatalogQuery(search: { q?: string; collections?: string; networks?: string; min?: string; max?: string; tab?: CatalogQuery['tab']; sort?: CatalogQuery['sort']; page?: number }): CatalogQuery {
+  return {
+    q: search.q,
+    collections: search.collections?.split(',') as CatalogQuery['collections'],
+    networks: search.networks?.split(',') as CatalogQuery['networks'],
+    min: search.min,
+    max: search.max,
+    tab: search.tab,
+    sort: search.sort,
+    page: search.page ?? 1,
+    pageSize: 9,
+  }
+}
+
 export const catalogQuery = (q: CatalogQuery) =>
   queryOptions({
     queryKey: qk.catalog(q),

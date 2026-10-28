@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { io } from 'socket.io-client'
 import { toast } from 'sonner'
 import { nftUpdatedSchema, orderUpdatedSchema, type CatalogPage, type Cart, type Nft, type NftUpdatedEvent, type Order, type OrderUpdatedEvent } from '@/api/contracts'
 import { qk, queryClient } from '@/app/query'
@@ -57,38 +56,53 @@ export function RealtimeBridge() {
 
   useEffect(() => {
     if (loading) return
-    const gate = createEventGate()
-    const socket = io(SOCKET_URL, { transports: ['websocket'], auth: token ? { token } : {}, reconnectionDelay: 500, reconnectionDelayMax: 3000 })
-    let connectedOnce = false
-
-    socket.on('connect', () => {
-      setStatus('connected')
-      // After an outage, events may have been missed: reconcile everything on screen with REST.
-      if (connectedOnce) queryClient.invalidateQueries({ type: 'active' })
-      connectedOnce = true
+    let disposed = false
+    let cleanup = () => {}
+    // Imported here, not at module top: engine.io-client captures globalThis.WebSocket when it is
+    // evaluated, and this effect only runs after MSW has patched it (see main.tsx).
+    import('socket.io-client').then(({ io }) => {
+      if (disposed) return
+      cleanup = connect(io, token)
     })
-    socket.on('disconnect', () => setStatus('reconnecting'))
-    socket.on('connect_error', () => setStatus('reconnecting'))
-    socket.on('nft.updated', (raw: unknown) => {
-      const parsed = nftUpdatedSchema.safeParse(raw)
-      if (!parsed.success) return
-      const known = queryClient.getQueryData<Nft>(qk.nft(parsed.data.resource.id))?.version ?? 0
-      if (gate.accept(parsed.data, known)) applyNft(parsed.data)
-    })
-    socket.on('order.updated', (raw: unknown) => {
-      const parsed = orderUpdatedSchema.safeParse(raw)
-      if (!parsed.success) return
-      const st = session.get()
-      const known = st.status === 'authenticated' ? (queryClient.getQueryData<Order>(qk.order(st.user.id, parsed.data.resource.id))?.version ?? 0) : 0
-      if (gate.accept(parsed.data, known)) applyOrder(parsed.data)
-    })
-
     return () => {
-      socket.removeAllListeners()
-      socket.disconnect()
+      disposed = true
+      cleanup()
       setStatus('connecting')
     }
   }, [token, loading])
 
   return null
+}
+
+function connect(io: typeof import('socket.io-client').io, token: string | null) {
+  const gate = createEventGate()
+  const socket = io(SOCKET_URL, { transports: ['websocket'], auth: token ? { token } : {}, reconnectionDelay: 500, reconnectionDelayMax: 3000 })
+  let connectedOnce = false
+
+  socket.on('connect', () => {
+    setStatus('connected')
+    // After an outage, events may have been missed: reconcile everything on screen with REST.
+    if (connectedOnce) queryClient.invalidateQueries({ type: 'active' })
+    connectedOnce = true
+  })
+  socket.on('disconnect', () => setStatus('reconnecting'))
+  socket.on('connect_error', () => setStatus('reconnecting'))
+  socket.on('nft.updated', (raw: unknown) => {
+    const parsed = nftUpdatedSchema.safeParse(raw)
+    if (!parsed.success) return
+    const known = queryClient.getQueryData<Nft>(qk.nft(parsed.data.resource.id))?.version ?? 0
+    if (gate.accept(parsed.data, known)) applyNft(parsed.data)
+  })
+  socket.on('order.updated', (raw: unknown) => {
+    const parsed = orderUpdatedSchema.safeParse(raw)
+    if (!parsed.success) return
+    const st = session.get()
+    const known = st.status === 'authenticated' ? (queryClient.getQueryData<Order>(qk.order(st.user.id, parsed.data.resource.id))?.version ?? 0) : 0
+    if (gate.accept(parsed.data, known)) applyOrder(parsed.data)
+  })
+
+  return () => {
+    socket.removeAllListeners()
+    socket.disconnect()
+  }
 }

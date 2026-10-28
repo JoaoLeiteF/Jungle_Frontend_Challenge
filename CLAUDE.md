@@ -30,9 +30,10 @@ npm run audit:lighthouse  # LHCI, 3 runs per page/profile, config in lighthouse/
   `@mswjs/socket.io-binding`, `scenarios.ts` latency/failure scenarios). App code must never import from `src/mocks/`
   or contain fake responses — that is disqualifying in the challenge. Mutations in the mock db must emit the matching
   socket event (`touchNft` / `emitOrderUpdated`).
-- **Boot order matters**: `src/main.tsx` starts MSW, *then* dynamically imports `src/app/mount.tsx`. engine.io-client
-  captures `globalThis.WebSocket` at import time, so importing app modules before MSW patches it silently bypasses the
-  socket mock.
+- **Boot order matters**: `src/main.tsx` loads MSW and `src/app/mount.tsx` in parallel but mounts only after the worker
+  is active. engine.io-client captures `globalThis.WebSocket` when evaluated, so `socket.io-client` must stay a lazy
+  import inside `RealtimeBridge` — a static import anywhere in the app graph silently bypasses the socket mock.
+- `tough-cookie` is aliased to a stub (`src/mocks/tough-cookie-stub.ts`) to keep MSW small; the mock API is token-based.
 - **Layers**: `src/api/` (Axios instance + zod contracts shared with the mocks; every response is schema-parsed) →
   `src/features/*/queries.ts` (TanStack Query options/mutations) → components. `src/app/session.ts` is an external
   store (useSyncExternalStore) so router guards, the Axios 401 interceptor and the socket share one session.

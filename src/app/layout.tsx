@@ -34,7 +34,7 @@ export function RootLayout() {
       <div className={bare ? 'max-md:hidden' : undefined}>
         <Header />
       </div>
-      <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-[1200px] px-4 pb-24 outline-none md:px-6 md:pb-0 xl:px-0">
+      <main id="conteudo" tabIndex={-1} className="mx-auto flow-root min-h-[100dvh] w-full max-w-[1200px] px-4 pb-24 outline-none md:px-6 md:pb-0 xl:px-0">
         <Outlet />
       </main>
       <div className={bare ? 'max-md:hidden' : undefined}>

@@ -7,6 +7,7 @@ import { queryClient } from './query'
 import { session } from './session'
 import { NotFoundPage } from '@/features/misc/not-found'
 import { Skeleton } from '@/components/states'
+import { catalogQuery, nftQuery, toCatalogQuery } from '@/features/catalog/queries'
 
 interface RouterContext {
   queryClient: typeof queryClient
@@ -46,11 +47,16 @@ const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   validateSearch: catalogSearchSchema,
+  // Not awaited: the request starts in parallel with the lazy chunk instead of after it, and the page
+  // renders its own skeleton meanwhile (no route-level pending screen).
+  loaderDeps: ({ search }) => search,
+  loader: ({ context, deps }) => void context.queryClient.prefetchQuery(catalogQuery(toCatalogQuery(deps))),
   component: lazyRouteComponent(() => import('@/features/catalog/home-page'), 'HomePage'),
 })
 const nftRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/nft/$nftId',
+  loader: ({ context, params }) => void context.queryClient.prefetchQuery(nftQuery(params.nftId)),
   component: lazyRouteComponent(() => import('@/features/nft/nft-page'), 'NftPage'),
 })
 const cartRoute = createRoute({ getParentRoute: () => rootRoute, path: '/cart', component: lazyRouteComponent(() => import('@/features/cart/cart-page'), 'CartPage') })
@@ -112,7 +118,7 @@ export const router = createRouter({
   defaultPreload: 'intent',
   // shown while a lazy route chunk or guard resolves (avoids a blank frame)
   defaultPendingComponent: () => (
-    <div role="status" aria-label="Carregando página" className="mt-10 flex flex-col gap-4">
+    <div role="status" aria-label="Carregando página" className="mt-[68px] flex flex-col gap-4">
       <Skeleton className="h-8 w-1/3" />
       <Skeleton className="h-64 w-full" />
     </div>
