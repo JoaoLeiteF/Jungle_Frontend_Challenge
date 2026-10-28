@@ -1,4 +1,5 @@
 import { useState, useSyncExternalStore } from 'react'
+import { Wordmark } from '@/components/wordmark'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
@@ -171,7 +172,9 @@ function AuthScreen({ mode }: { mode: Mode }) {
 
   return (
     <section className="mx-auto flex min-h-[100dvh] max-w-sm flex-col justify-center gap-8 py-10" aria-labelledby="auth-title">
-      <p className="text-center text-3xl font-bold tracking-[0.1em]">KURIO</p>
+      <p className="text-center text-3xl">
+        <Wordmark animated />
+      </p>
       <h1 id="auth-title" className="text-center text-lg font-bold">
         {mode === 'login' ? 'Entrar' : 'Criar perfil de colecionador'}
       </h1>

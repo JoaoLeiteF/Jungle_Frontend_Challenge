@@ -19,6 +19,16 @@ test.describe('painel de cenários do mock', () => {
     await expect(page.getByRole('status').filter({ hasText: /resultados/ })).toHaveText('60 resultados')
   })
 
+  test('cenário de uma tela específica prepara o caso e abre essa tela', async ({ page }) => {
+    await open(page, '/')
+    await page.getByRole('button', { name: /Abrir painel de cenários/ }).click()
+    await page.getByRole('region', { name: 'Cenários de simulação' }).getByRole('radio', { name: /payment-declined/ }).click()
+    await expect(page).toHaveURL(/\/checkout$/)
+    await expect(page.getByText('Conecte a carteira e confirme: o pagamento é recusado.')).toBeVisible()
+    await expect(page.getByRole('link', { name: /Perfil de Ana Souza/ })).toBeVisible()
+    await expect(page.getByRole('main').getByText('Emerald Ape #042').first()).toBeVisible()
+  })
+
   test('resetar dados e sessão confirma o que fez', async ({ page }) => {
     await open(page, '/', 'slow')
     await page.getByRole('button', { name: /Abrir painel de cenários/ }).click()

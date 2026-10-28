@@ -5,6 +5,7 @@ import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { MobileNav } from '@/components/mobile-nav'
 import { MockPanel } from '@/components/mock-panel'
+import { TopLoader } from '@/components/top-loader'
 import { RealtimeBridge } from '@/realtime/bridge'
 import { useSession } from './session'
 
@@ -30,6 +31,7 @@ export function RootLayout() {
   if (!navigated && section !== initial) setNavigated(true)
   return (
     <>
+      <TopLoader />
       <a href="#conteudo" className="sr-only z-50 rounded bg-brand px-3 py-2 text-ink focus:not-sr-only focus:fixed focus:top-2 focus:left-2">
         Pular para o conteúdo
       </a>

@@ -54,12 +54,16 @@ const HEALTH_EVERY_MS = 2000
  */
 function keepMocksAlive(worker: ReturnType<typeof setupWorker>, options: Parameters<ReturnType<typeof setupWorker>['start']>[0]) {
   let healing = false
+  // MSW deregisters the tab on beforeunload: a probe after that would wrongly look like a dead worker.
+  let leaving = false
+  window.addEventListener('beforeunload', () => (leaving = true))
+  window.addEventListener('pageshow', () => (leaving = false))
   const check = async () => {
-    if (healing || document.visibilityState !== 'visible') return
+    if (healing || leaving || document.visibilityState !== 'visible') return
     const healthy = await fetch(HEALTH_URL, { cache: 'no-store' })
       .then(async (r) => r.ok && (await r.json()).ok === true)
       .catch(() => false)
-    if (healthy) return
+    if (healthy || leaving) return
     healing = true
     try {
       worker.stop()

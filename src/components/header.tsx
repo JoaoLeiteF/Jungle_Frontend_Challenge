@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Wordmark } from '@/components/wordmark'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { LogIn, LogOut, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -63,8 +64,8 @@ export function Header() {
   const [searching, setSearching] = useState(false)
   return (
     <header className="mx-auto hidden h-[77px] max-w-[1200px] items-center border-b border-line px-6 md:flex xl:px-0">
-      <Link to="/" className="text-sm font-bold tracking-[0.1em]" aria-label="Kurio — página inicial">
-        KURIO
+      <Link to="/" className="group/brand text-lg" aria-label="Kurio — página inicial">
+        <Wordmark animated />
       </Link>
       <nav aria-label="Principal" className="mx-auto flex h-full items-stretch gap-6 lg:gap-10">
         {NAV.map((item) => {
@@ -76,7 +77,10 @@ export function Header() {
               hash={'hash' in item ? item.hash : undefined}
               search={'search' in item ? item.search : undefined}
               aria-current={active ? 'page' : undefined}
-              className={cn('relative flex items-center text-base hover:text-highlight', active && 'font-bold text-highlight after:absolute after:inset-x-0 after:bottom-2 after:h-[3px] after:rounded after:bg-highlight')}
+              className={cn(
+                'relative flex items-center text-base transition-colors after:absolute after:inset-x-0 after:bottom-2 after:h-[3px] after:origin-center after:scale-x-0 after:rounded after:bg-highlight after:transition-transform after:duration-300 after:ease-[cubic-bezier(0.22,1,0.36,1)] hover:text-highlight hover:after:scale-x-50',
+                active && 'font-bold text-highlight after:scale-x-100 hover:after:scale-x-100',
+              )}
             >
               {item.label}
             </Link>

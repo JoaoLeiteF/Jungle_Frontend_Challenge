@@ -6,6 +6,7 @@ import { Icon } from '@/components/icon'
 import { NftImage } from '@/components/nft-image'
 import { Skeleton } from '@/components/states'
 import { useAddToCart } from '@/features/cart/queries'
+import { LivePrice } from '@/components/live-price'
 import { formatEth } from '@/lib/eth'
 import { cn } from '@/lib/utils'
 import { useFavorites, useToggleFavorite } from './queries'
@@ -77,7 +78,7 @@ export function NftCard({ nft, priority }: { nft: Nft; priority?: boolean }) {
         </h3>
         <p className="mt-1 font-bold text-highlight">
           <span className="sr-only">Preço: </span>
-          {formatEth(nft.listPriceEth)}
+          <LivePrice value={nft.listPriceEth} />
           {nft.compareAtEth && (
             <s className="ml-2 font-normal text-sand">
               <span className="sr-only">antes </span>

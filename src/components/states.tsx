@@ -1,4 +1,4 @@
-import { AlertTriangle, RotateCw } from 'lucide-react'
+import { AlertTriangle, Loader2, RotateCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -32,7 +32,8 @@ export function EmptyState({ title, children, className }: { title: string; chil
 
 export function RefreshingHint({ show }: { show: boolean }) {
   return (
-    <span role="status" aria-live="polite" className={cn('text-xs text-sand transition-opacity', show ? 'opacity-100' : 'opacity-0')}>
+    <span role="status" aria-live="polite" className={cn('inline-flex items-center gap-1.5 text-xs text-sand transition-opacity duration-300', show ? 'opacity-100' : 'opacity-0')}>
+      {show && <Loader2 className="size-3 animate-spin text-brand" aria-hidden />}
       {show ? 'Atualizando…' : ''}
     </span>
   )

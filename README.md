@@ -66,7 +66,7 @@ Um teste só: `npx playwright test e2e/cart.spec.ts --project=desktop -g "cupom"
 
 Escolha o cenário de qualquer forma abaixo (ele fica salvo até o reset):
 
-1. **Painel "Mock"** — botão de frasco no canto inferior esquerdo: lista de cenários + "Resetar dados e sessão".
+1. **Painel "Mock"** — botão de frasco no canto inferior esquerdo (mostra o cenário ativo): lista de cenários + "Resetar dados e sessão". Cenários de uma tela específica preparam o caso e abrem essa tela — `price-change`/`sold-out` colocam um NFT no carrinho e abrem o carrinho; `order-timeout`, `payment-declined` e `wallet-rejected` entram como Ana, garantem um item e abrem o pagamento; `favorites-fail` e `session-expired` entram como Ana. Um aviso diz o que fazer em seguida.
 2. **URL** — `?scenario=<nome>` em qualquer rota, ex.: `/?scenario=slow`.
 3. **Console / testes** — `window.__kurioMock.setScenario('payment-declined')`, `await window.__kurioMock.reset()`.
 
@@ -86,6 +86,8 @@ Escolha o cenário de qualquer forma abaixo (ele fica salvo até o reset):
 | `order-timeout` | o pedido é criado, mas a resposta demora 12 s (o cliente desiste em 10 s e recupera pela idempotência) |
 | `payment-declined` | o pedido termina recusado |
 | `wallet-rejected` | a carteira recusa a conexão |
+
+**Console do navegador**: nos cenários de falha o console registra as falhas simuladas — é o cenário funcionando, não um bug. `offline` gera `net::ERR_FAILED` (o Chrome também avisa *"The FetchEvent … resulted in a network error response"*, que é como ele reporta o erro de rede simulado pelo MSW); `error-500` e `flaky-503` geram as respostas 500/503. Cada consulta tenta 3 vezes (1 + 2 retries automáticos) antes de mostrar o erro. No cenário `default` o console fica limpo.
 
 **Reset**: painel → "Resetar dados e sessão", `POST /api/__mock/reset` ou `window.__kurioMock.reset()` — restaura o seed
 completo (catálogo, usuários, carrinhos, pedidos) e o cenário `default`.

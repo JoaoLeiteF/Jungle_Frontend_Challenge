@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight, SlidersHorizontal } from 'lucide-react'
 import { SORTS, TABS, type Sort, type Tab } from '@/api/contracts'
 import { isApiError } from '@/api/client'
 import { Icon } from '@/components/icon'
+import { Wordmark } from '@/components/wordmark'
 import { NftImage } from '@/components/nft-image'
 import { EmptyState, ErrorState, RefreshingHint } from '@/components/states'
 import { Button } from '@/components/ui/button'
@@ -63,6 +64,12 @@ export function Hero() {
   const [warm, setWarm] = useState(false)
   const touchX = useRef<number | null>(null)
   const go = (i: number) => setIndex((i + SLIDES.length) % SLIDES.length)
+  const depth = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== 'mouse' || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const r = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--px', (((e.clientX - r.left) / r.width) * 2 - 1).toFixed(3))
+    e.currentTarget.style.setProperty('--py', (((e.clientY - r.top) / r.height) * 2 - 1).toFixed(3))
+  }
 
   useEffect(() => {
     const t = setTimeout(() => setWarm(true), 1500)
@@ -78,9 +85,14 @@ export function Hero() {
     <section
       aria-roledescription="carrossel"
       aria-label="Destaques"
-      className="relative isolate mt-6 overflow-hidden rounded-[20px] bg-[radial-gradient(130%_110%_at_88%_8%,#5a3520_0%,#38220f_40%,#241612_78%)] before:absolute before:-top-24 before:-right-20 before:-z-10 before:size-72 before:rounded-full before:bg-brand/10 md:mt-0 md:rounded-none md:bg-none md:before:hidden"
+      className="relative isolate mt-4 overflow-hidden rounded-[20px] bg-[radial-gradient(130%_110%_at_88%_8%,#5a3520_0%,#38220f_40%,#241612_78%)] before:absolute before:-top-24 before:-right-20 before:-z-10 before:size-72 before:rounded-full before:bg-brand/10 md:mt-0 md:rounded-none md:bg-none md:before:hidden"
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={(e) => {
+        setPaused(false)
+        e.currentTarget.style.setProperty('--px', '0')
+        e.currentTarget.style.setProperty('--py', '0')
+      }}
+      onPointerMove={depth}
       onFocus={() => setPaused(true)}
       onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setPaused(false)}
       onKeyDown={(e) => {
@@ -97,6 +109,10 @@ export function Hero() {
         {SLIDES.map((slide, i) => {
           const active = i === index
           const Title = active ? 'h1' : 'p'
+          const rise = (delay: number) => ({
+            className: cn('transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]', active ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'),
+            style: { transitionDelay: active ? `${delay}ms` : '0ms' },
+          })
           return (
             <div
               key={slide.image}
@@ -109,18 +125,30 @@ export function Hero() {
                 active ? 'opacity-100' : 'opacity-0',
               )}
             >
-              <div className={cn('transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] md:pl-8', active ? 'translate-y-0' : 'translate-y-3')}>
-                <p className="text-xs font-medium tracking-[0.1em] md:text-sm">{slide.eyebrow}</p>
-                <Title className="mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:max-w-[600px] md:text-[43px] md:leading-[70px]">{slide.title}</Title>
-                <p className="mt-2 max-w-[520px] text-[11px] leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]">{slide.text}</p>
-                <Button asChild className="mt-3 h-[31px] px-4 text-sm max-md:h-auto max-md:bg-transparent max-md:px-0 max-md:text-highlight max-md:hover:bg-transparent md:mt-8 md:px-5 md:text-base">
-                  <Link to="/" search={slide.search} hash="catalogo">
-                    EXPLORAR <ArrowRight aria-hidden className="md:hidden" />
-                  </Link>
-                </Button>
+              <div className="md:pl-8">
+                <p {...rise(0)}>
+                  <span className="inline-flex items-center gap-2 text-xs font-medium tracking-[0.1em] md:text-sm">
+                    <span aria-hidden className="h-px w-6 bg-brand max-md:hidden" />
+                    {slide.eyebrow}
+                  </span>
+                </p>
+                <Title {...rise(90)} className={cn(rise(90).className, 'mt-2 text-base leading-tight font-bold tracking-[0.04em] uppercase md:mt-5 md:max-w-[600px] md:text-[43px] md:leading-[70px]')}>
+                  {slide.title}
+                </Title>
+                <p {...rise(180)} className={cn(rise(180).className, 'mt-2 max-w-[520px] text-[11px] leading-4 text-sand md:mt-3 md:text-sm md:leading-[26px]')}>
+                  {slide.text}
+                </p>
+                <div {...rise(270)}>
+                  <Button asChild className="group/cta mt-3 h-[31px] px-4 text-sm max-md:h-auto max-md:bg-transparent max-md:px-0 max-md:text-highlight max-md:hover:bg-transparent md:mt-8 md:h-10 md:px-6 md:text-base">
+                    <Link to="/" search={slide.search} hash="catalogo">
+                      EXPLORAR <ArrowRight aria-hidden className="transition-transform duration-200 group-hover/cta:translate-x-1" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
               <div className="relative w-full max-w-[450px]">
-                <div className="aspect-square overflow-hidden rounded-[14px] shadow-[0_10px_24px_-10px_rgb(0_0_0/0.7)] md:rounded-hero md:shadow-none">
+                <span aria-hidden className={cn('pointer-events-none absolute -inset-12 -z-10 hidden rounded-full bg-[radial-gradient(closest-side,rgb(232_155_85/0.22),transparent_75%)] blur-3xl transition-opacity duration-1000 md:block', active ? 'opacity-100' : 'opacity-0')} />
+                <div className="aspect-square overflow-hidden rounded-[14px] shadow-[0_10px_24px_-10px_rgb(0_0_0/0.7)] transition-transform duration-700 ease-out md:rounded-hero md:shadow-[0_24px_48px_-24px_rgb(0_0_0/0.8)] md:[transform:translate3d(calc(var(--px,0)*-6px),calc(var(--py,0)*-6px),0)]">
                   {(i === 0 || warm) && (
                     <NftImage
                       image={slide.image}
@@ -137,11 +165,11 @@ export function Hero() {
                     onClick={() => go(i + 1)}
                     aria-label={`Próximo destaque: ${SLIDES[(i + 1) % SLIDES.length]!.title}`}
                     className={cn(
-                      'absolute -bottom-3 -left-4 w-[46%] overflow-hidden rounded-[10px] ring-2 ring-surface-card shadow-[0_6px_14px_-6px_rgb(0_0_0/0.8)] transition-[transform,opacity] delay-300 duration-500 ease-out active:scale-95 md:hidden',
+                      'absolute -bottom-3 -left-4 w-[46%] overflow-hidden rounded-[10px] ring-2 ring-surface-card shadow-[0_6px_14px_-6px_rgb(0_0_0/0.8)] transition-[transform,opacity] delay-300 duration-700 ease-out active:scale-95 md:-bottom-7 md:-left-12 md:w-[30%] md:rounded-[18px] md:ring-4 md:ring-ink md:shadow-[0_18px_36px_-14px_rgb(0_0_0/0.9)] md:[transform:translate3d(calc(var(--px,0)*10px),calc(var(--py,0)*10px),0)] md:hover:ring-brand/60',
                       active ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
                     )}
                   >
-                    <NftImage image={SLIDES[(i + 1) % SLIDES.length]!.image} alt="" sizes="80px" />
+                    <NftImage image={SLIDES[(i + 1) % SLIDES.length]!.image} alt="" sizes="(min-width: 768px) 140px, 80px" />
                   </button>
                 )}
               </div>
@@ -487,7 +515,13 @@ export function HomePage() {
   }, [])
   return (
     <div className="flex flex-col gap-12 md:gap-24">
-      <Hero />
+      <div>
+        <div className="mt-5 flex items-center justify-between md:hidden">
+          <Wordmark animated className="text-xl" />
+          <span className="text-[11px] tracking-[0.08em] text-sand">Marketplace de NFTs</span>
+        </div>
+        <Hero />
+      </div>
       <Catalog />
       <Promos />
       <Blog />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Wordmark } from '@/components/wordmark'
 import { Link } from '@tanstack/react-router'
 import { Icon, type FigmaIcon } from './icon'
 
@@ -89,7 +90,7 @@ export function Footer() {
           </div>
         </div>
         <div className="grid gap-x-8 gap-y-3 bg-surface-dark px-6 py-6 text-sm sm:grid-cols-2 md:px-8 lg:grid-cols-4 lg:items-center">
-          <span className="font-bold tracking-[0.1em]">KURIO</span>
+          <Wordmark className="text-lg" />
           <span className="leading-[22px]">Feito para colecionadores, criadores e cultura</span>
           <a href="mailto:contato@email.com" className="w-fit transition-colors hover:text-highlight">
             contato@email.com

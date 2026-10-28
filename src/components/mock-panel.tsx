@@ -5,6 +5,7 @@ import { FlaskConical, Loader2, RotateCcw, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { http } from '@/api/client'
+import { api } from '@/api/endpoints'
 import { session } from '@/app/session'
 import { cn } from '@/lib/utils'
 
@@ -20,6 +21,30 @@ async function withRetry<T>(run: () => Promise<T>, tries = 4): Promise<T> {
       await new Promise((r) => setTimeout(r, 1500))
     }
   }
+}
+
+type Need = 'login' | 'cart'
+/** Scenarios that only show on one screen: the panel prepares the case and opens that screen. */
+const CASES: Record<string, { to: '/' | '/cart' | '/checkout' | '/profile'; screen: string; hint: string; needs?: Need[] }> = {
+  empty: { to: '/', screen: 'Início', hint: 'O catálogo aparece vazio.' },
+  slow: { to: '/', screen: 'Início', hint: 'Cada requisição leva de 1,5 a 3 s: veja os skeletons.' },
+  jitter: { to: '/', screen: 'Início', hint: 'Troque filtros rápido: só a última consulta aparece.' },
+  offline: { to: '/', screen: 'Início', hint: 'Toda a API falha como erro de rede.' },
+  'error-500': { to: '/', screen: 'Início', hint: 'Catálogo e detalhe respondem 500: use “Tentar novamente”.' },
+  'flaky-503': { to: '/', screen: 'Início', hint: 'A 1ª tentativa falha e o retry automático recupera.' },
+  'favorites-fail': { to: '/', screen: 'Início', needs: ['login'], hint: 'Favorite um NFT: o coração volta ao estado anterior.' },
+  'session-expired': { to: '/profile', screen: 'Perfil', needs: ['login'], hint: 'Em 20 s a sessão expira; navegue para ser levado ao login.' },
+  'price-change': { to: '/cart', screen: 'Carrinho', needs: ['cart'], hint: 'Em 4 s o preço do 1º item sobe 0.05 ETH.' },
+  'sold-out': { to: '/cart', screen: 'Carrinho', needs: ['cart'], hint: 'Em 4 s a edição do 1º item esgota.' },
+  'order-timeout': { to: '/checkout', screen: 'Pagamento', needs: ['login', 'cart'], hint: 'Conecte a carteira e confirme: a resposta demora 12 s.' },
+  'payment-declined': { to: '/checkout', screen: 'Pagamento', needs: ['login', 'cart'], hint: 'Conecte a carteira e confirme: o pagamento é recusado.' },
+  'wallet-rejected': { to: '/checkout', screen: 'Pagamento', needs: ['login', 'cart'], hint: 'Clique em conectar: a carteira recusa a conexão.' },
+}
+const DEMO_USER = { email: 'ana@kurio.test', password: 'Kurio@123' }
+
+async function prepare(needs: Need[] = []) {
+  if (needs.includes('login') && session.get().status !== 'authenticated') await session.login(DEMO_USER)
+  if (needs.includes('cart') && (await api.cart.get()).items.length === 0) await api.cart.add({ nftId: 'emerald-ape-042', edition: 3, quantity: 1 })
 }
 
 const fetchInfo = () => withRetry(async () => infoSchema.parse((await http.get('/__mock/scenario')).data))
@@ -59,8 +84,11 @@ export function MockPanel() {
       const active = z.object({ scenario: z.string() }).parse(r.data).scenario
       setInfo((i) => (i ? { ...i, scenario: active } : i))
       dropScenarioFromUrl()
-      toast.success(`Cenário “${active}” ativado`, { description: info?.available[active] })
+      const kase = CASES[active]
+      await prepare(kase?.needs)
       await qc.invalidateQueries()
+      if (kase && location.pathname !== kase.to) await router.navigate({ to: kase.to })
+      toast.success(`Cenário “${active}” ativado`, { description: kase?.hint ?? info?.available[active] })
     } catch {
       toast.error('Não foi possível trocar o cenário. Tente novamente.')
     } finally {
@@ -117,8 +145,11 @@ export function MockPanel() {
                       <span aria-hidden className={cn('mt-0.5 grid size-3.5 shrink-0 place-items-center rounded-full border', checked ? 'border-brand' : 'border-sand-muted')}>
                         {busy === name ? <Loader2 className="size-3 animate-spin text-brand" /> : checked && <span className="size-1.5 rounded-full bg-brand" />}
                       </span>
-                      <span className="min-w-0">
-                        <span className={cn('block font-bold', checked && 'text-highlight')}>{name}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className={cn('font-bold', checked && 'text-highlight')}>{name}</span>
+                          {CASES[name] && <span className="shrink-0 rounded-full border border-line-soft px-1.5 text-[10px] leading-4 text-sand">{CASES[name].screen}</span>}
+                        </span>
                         <span className="block leading-4 text-sand">{description}</span>
                       </span>
                     </button>

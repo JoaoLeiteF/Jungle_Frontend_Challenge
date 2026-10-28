@@ -15,6 +15,7 @@ import { useAddToCart } from '@/features/cart/queries'
 import { FavoriteButton, NftCard, NftCardSkeleton } from '@/features/catalog/nft-card'
 import { catalogQuery, nftQuery } from '@/features/catalog/queries'
 import { NotFoundPage } from '@/features/misc/not-found'
+import { LivePrice } from '@/components/live-price'
 import { formatEth } from '@/lib/eth'
 import { cn } from '@/lib/utils'
 
@@ -142,7 +143,9 @@ function Purchase({ nft }: { nft: Nft }) {
           <span className="md:sr-only">Qtd.</span>
           <QuantityStepper value={qty} max={Math.max(1, limit)} onChange={setQty} label="quantidade" disabled={soldOut} />
         </div>
-        <p className="text-xl font-bold text-highlight md:hidden">{formatEth(edition.priceEth)}</p>
+        <p className="text-xl font-bold text-highlight md:hidden">
+          <LivePrice value={edition.priceEth} />
+        </p>
         <div className="flex gap-2 max-md:w-full">
           <Button onClick={() => buy(true)} disabled={soldOut} loading={add.isPending} className="h-10 px-9 max-md:flex-1 max-md:rounded-full">
             {allSoldOut ? 'ESGOTADO' : 'COMPRAR'}
@@ -248,7 +251,9 @@ export function NftPage() {
             </h1>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
-            <p className="text-xl font-bold text-highlight max-md:hidden">{formatEth(price)}</p>
+            <p className="text-xl font-bold text-highlight max-md:hidden">
+              <LivePrice value={price} />
+            </p>
             <p className="flex items-center gap-2 text-sm">
               <Stars rating={nft.rating} />
               <span>
