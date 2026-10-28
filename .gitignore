@@ -1,0 +1,17 @@
+node_modules
+dist
+.vercel
+*.local
+.env
+.env.*
+!.env.example
+# raw Figma material (processed copies live in public/ and docs/figma/)
+Export/
+Images/
+*.zip
+# test & audit outputs
+test-results/
+playwright-report/
+blob-report/
+.lighthouseci/
+lighthouse/reports/tmp/

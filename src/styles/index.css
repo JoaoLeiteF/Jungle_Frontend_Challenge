@@ -1,0 +1,106 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/roboto-mono';
+
+/* Kurio tokens — extraídos dos color styles do Figma (docs/figma/README.md) */
+@theme {
+  --font-mono: 'Roboto Mono Variable', ui-monospace, monospace;
+  --font-sans: var(--font-mono);
+
+  --color-ink: #140d0a;
+  --color-surface-card: #241612;
+  --color-surface-raised: #2f1d15;
+  --color-surface-dark: #38220f;
+  --color-line: #3f2319;
+  --color-line-soft: #55321f;
+  --color-cream: #f5f1eb;
+  --color-sand: #cfb28c;
+  --color-sand-muted: #b39463;
+  --color-brand: #d28a4c;
+  --color-brand-light: #dd9a5f;
+  --color-brand-dark: #c47b3e;
+  --color-highlight: #e89b55;
+  --color-amber: #e3a44e;
+  --color-coral: #ea6b4f;
+  --color-success: #00a66c;
+  --color-danger: #ff5a5f; /* #ED1B2E do Figma não passa contraste 4.5:1 sobre #140D0A — ver ARCHITECTURE.md */
+
+  --radius-card: 15px;
+  --radius-hero: 24px;
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+}
+
+/* Mapeamento para as variáveis que os componentes shadcn/ui esperam */
+:root {
+  --background: var(--color-ink);
+  --foreground: var(--color-cream);
+  --card: var(--color-surface-card);
+  --card-foreground: var(--color-cream);
+  --popover: var(--color-surface-card);
+  --popover-foreground: var(--color-cream);
+  --primary: var(--color-brand);
+  --primary-foreground: var(--color-ink);
+  --secondary: var(--color-surface-raised);
+  --secondary-foreground: var(--color-cream);
+  --muted: var(--color-surface-raised);
+  --muted-foreground: var(--color-sand);
+  --accent: var(--color-surface-raised);
+  --accent-foreground: var(--color-cream);
+  --destructive: var(--color-danger);
+  --border: var(--color-line);
+  --input: var(--color-line-soft);
+  --ring: var(--color-highlight);
+  --radius: 6px;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/60; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-ink text-cream font-mono antialiased; min-height: 100dvh; }
+  :focus-visible { outline: 2px solid var(--color-highlight); outline-offset: 2px; }
+  ::selection { background: var(--color-brand); color: var(--color-ink); }
+}
+
+@layer components {
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-surface-card) 25%, var(--color-surface-raised) 50%, var(--color-surface-card) 75%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .skeleton { animation: none; background: var(--color-surface-raised); }
+}

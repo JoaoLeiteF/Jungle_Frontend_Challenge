@@ -1,0 +1,120 @@
+import { createRootRouteWithContext, createRoute, createRouter, lazyRouteComponent, redirect } from '@tanstack/react-router'
+import { z } from 'zod'
+import { collectionSchema, networkSchema, sortSchema, tabSchema } from '@/api/contracts'
+import { isEth } from '@/lib/eth'
+import { RootLayout } from './layout'
+import { queryClient } from './query'
+import { session } from './session'
+import { NotFoundPage } from '@/features/misc/not-found'
+
+interface RouterContext {
+  queryClient: typeof queryClient
+}
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({ component: RootLayout, notFoundComponent: () => <NotFoundPage /> })
+
+// Catalog state lives in the URL. Lists are comma-separated so links stay readable and shareable;
+// anything invalid is dropped instead of breaking the page.
+const list = <T extends z.ZodType>(item: T) =>
+  z
+    .string()
+    .optional()
+    .transform((v) => (v ? v.split(',').filter((x) => item.safeParse(x).success).join(',') || undefined : undefined))
+    .catch(undefined)
+export const catalogSearchSchema = z.object({
+  q: z.string().trim().max(80).optional().catch(undefined),
+  collections: list(collectionSchema),
+  networks: list(networkSchema),
+  min: z.string().refine(isEth).optional().catch(undefined),
+  max: z.string().refine(isEth).optional().catch(undefined),
+  tab: tabSchema.optional().catch(undefined),
+  sort: sortSchema.optional().catch(undefined),
+  page: z.coerce.number().int().positive().optional().catch(undefined),
+})
+export type CatalogSearch = z.infer<typeof catalogSearchSchema>
+
+const redirectSearch = z.object({ redirect: z.string().startsWith('/').optional().catch(undefined) })
+
+/** Private routes wait for the boot session check, then bounce anonymous visitors to login and back. */
+async function requireAuth({ location }: { location: { href: string } }) {
+  await session.ready()
+  if (session.get().status !== 'authenticated') throw redirect({ to: '/login', search: { redirect: location.href } })
+}
+
+const homeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  validateSearch: catalogSearchSchema,
+  component: lazyRouteComponent(() => import('@/features/catalog/home-page'), 'HomePage'),
+})
+const nftRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/nft/$nftId',
+  component: lazyRouteComponent(() => import('@/features/nft/nft-page'), 'NftPage'),
+})
+const cartRoute = createRoute({ getParentRoute: () => rootRoute, path: '/cart', component: lazyRouteComponent(() => import('@/features/cart/cart-page'), 'CartPage') })
+const checkoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/checkout',
+  beforeLoad: requireAuth,
+  component: lazyRouteComponent(() => import('@/features/checkout/checkout-page'), 'CheckoutPage'),
+})
+const orderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/orders/$orderId',
+  beforeLoad: requireAuth,
+  component: lazyRouteComponent(() => import('@/features/checkout/order-page'), 'OrderPage'),
+})
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  validateSearch: redirectSearch,
+  component: lazyRouteComponent(() => import('@/features/auth/auth-page'), 'LoginPage'),
+})
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  validateSearch: redirectSearch,
+  component: lazyRouteComponent(() => import('@/features/auth/auth-page'), 'RegisterPage'),
+})
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profile',
+  beforeLoad: requireAuth,
+  component: lazyRouteComponent(() => import('@/features/account/account-layout'), 'AccountLayout'),
+})
+const profileIndexRoute = createRoute({ getParentRoute: () => profileRoute, path: '/', component: lazyRouteComponent(() => import('@/features/account/profile-page'), 'ProfilePage') })
+const walletsRoute = createRoute({ getParentRoute: () => profileRoute, path: '/wallets', component: lazyRouteComponent(() => import('@/features/account/wallets-page'), 'WalletsPage') })
+const favoritesRoute = createRoute({ getParentRoute: () => profileRoute, path: '/favorites', component: lazyRouteComponent(() => import('@/features/account/favorites-page'), 'FavoritesPage') })
+const comingSoonRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/em-breve',
+  validateSearch: z.object({ secao: z.string().max(40).optional().catch(undefined) }),
+  component: lazyRouteComponent(() => import('@/features/misc/coming-soon'), 'ComingSoonPage'),
+})
+
+const routeTree = rootRoute.addChildren([
+  homeRoute,
+  nftRoute,
+  cartRoute,
+  checkoutRoute,
+  orderRoute,
+  loginRoute,
+  registerRoute,
+  profileRoute.addChildren([profileIndexRoute, walletsRoute, favoritesRoute]),
+  comingSoonRoute,
+])
+
+export const router = createRouter({
+  routeTree,
+  context: { queryClient },
+  defaultPreload: 'intent',
+  defaultPreloadStaleTime: 0, // Query owns caching
+  scrollRestoration: true,
+})
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
