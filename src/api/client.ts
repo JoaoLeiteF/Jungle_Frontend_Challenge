@@ -53,6 +53,8 @@ http.interceptors.response.use(undefined, (error: unknown) => {
 
   const body = error.response.data as Partial<ApiErrorBody> | undefined
   const status = error.response.status
+  // Not our API answering (a proxy page, a bare 404): treat it as unreachable so queries retry.
+  if (!body?.error) return Promise.reject(new ApiError(0, 'NETWORK', 'Sem conexão com o servidor.'))
   const code = body?.error?.code ?? (status >= 500 ? 'INTERNAL' : 'VALIDATION')
   const apiError = new ApiError(status, code, body?.error?.message ?? 'Erro inesperado.', body?.error?.fields, body?.error?.details)
   if (status === 401 && storage.getToken()) onUnauthorized(code)
@@ -61,7 +63,8 @@ http.interceptors.response.use(undefined, (error: unknown) => {
 
 /** Every response is parsed against its contract: a mismatch is a bug, surfaced loudly. */
 export async function request<S extends z.ZodType>(schema: S, config: AxiosRequestConfig): Promise<z.infer<S>> {
-  const { data } = await http.request(config)
+  const { data, headers } = await http.request(config)
+  if (!String(headers['content-type'] ?? '').includes('json')) throw new ApiError(0, 'NETWORK', 'Sem conexão com o servidor.')
   return schema.parse(data)
 }
 

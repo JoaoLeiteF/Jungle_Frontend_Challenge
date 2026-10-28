@@ -52,10 +52,12 @@ type Ctx = { request: Request; params: Record<string, string | readonly string[]
 type Handler = (ctx: Ctx) => unknown | Promise<unknown>
 
 function route(method: 'get' | 'post' | 'put' | 'patch' | 'delete', path: string, fn: Handler) {
+  // The scenario controls must keep answering while the scenario itself breaks the API (offline, 503…).
+  const control = path.startsWith('/__mock')
   return http[method](`${BASE}${path}`, async ({ request, params }) => {
-    await latency()
+    if (!control) await latency()
     const url = new URL(request.url)
-    const gate = failure(request.method, url.pathname.slice(BASE.length))
+    const gate = control ? undefined : failure(request.method, url.pathname.slice(BASE.length))
     if (gate) return gate
     try {
       const result = await fn({ request, params, url })
@@ -660,6 +662,7 @@ export const handlers = [
     scheduledFor = null
     return { ok: true }
   }),
+  route('get', '/__mock/health', () => ({ ok: true })),
   route('get', '/__mock/scenario', () => ({ scenario: scenario(), available: SCENARIOS })),
   route('put', '/__mock/scenario', async (ctx) => {
     const { scenario: name } = (await json(ctx)) as { scenario?: ScenarioName }

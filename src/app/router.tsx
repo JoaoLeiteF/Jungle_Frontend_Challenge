@@ -6,6 +6,7 @@ import { RootLayout } from './layout'
 import { queryClient } from './query'
 import { session } from './session'
 import { NotFoundPage } from '@/features/misc/not-found'
+import { ErrorPage } from '@/features/misc/error-page'
 import { Skeleton } from '@/components/states'
 import { catalogQuery, nftQuery, toCatalogQuery } from '@/features/catalog/queries'
 
@@ -13,7 +14,7 @@ interface RouterContext {
   queryClient: typeof queryClient
 }
 
-const rootRoute = createRootRouteWithContext<RouterContext>()({ component: RootLayout, notFoundComponent: () => <NotFoundPage /> })
+const rootRoute = createRootRouteWithContext<RouterContext>()({ component: RootLayout, notFoundComponent: () => <NotFoundPage />, errorComponent: ErrorPage })
 
 const list = <T extends z.ZodType>(item: T) =>
   z
@@ -117,6 +118,7 @@ export const router = createRouter({
       <Skeleton className="h-64 w-full" />
     </div>
   ),
+  defaultErrorComponent: ErrorPage,
   defaultPendingMs: 150,
   defaultPreloadStaleTime: 0,
   scrollRestoration: true,

@@ -44,14 +44,46 @@ declare global {
   }
 }
 
+const HEALTH_URL = `${import.meta.env.VITE_API_URL ?? '/api'}/__mock/health`
+const HEALTH_EVERY_MS = 2000
+
+/**
+ * Browsers stop idle service workers. MSW's worker keeps its activated clients in memory only, so
+ * after a restart it silently passes every request through to the network (on Vercel that is the
+ * SPA's index.html). Probe a mocked endpoint and redo the activation handshake when it stops answering.
+ */
+function keepMocksAlive(worker: ReturnType<typeof setupWorker>, options: Parameters<ReturnType<typeof setupWorker>['start']>[0]) {
+  let healing = false
+  const check = async () => {
+    if (healing || document.visibilityState !== 'visible') return
+    const healthy = await fetch(HEALTH_URL, { cache: 'no-store' })
+      .then(async (r) => r.ok && (await r.json()).ok === true)
+      .catch(() => false)
+    if (healthy) return
+    healing = true
+    try {
+      worker.stop()
+      await worker.start(options)
+    } finally {
+      healing = false
+    }
+  }
+  setInterval(check, HEALTH_EVERY_MS)
+  document.addEventListener('visibilitychange', check)
+  window.addEventListener('focus', check)
+}
+
 export async function startMocks() {
   await loadDb()
   initScenario()
   resumePendingOrders()
   window.__kurioMock = control
-  await setupWorker(...handlers, realtimeHandler).start({
-    onUnhandledRequest: 'bypass',
+  const worker = setupWorker(...handlers, realtimeHandler)
+  const options = {
+    onUnhandledRequest: 'bypass' as const,
     quiet: import.meta.env.PROD,
     serviceWorker: { url: `${import.meta.env.BASE_URL}mockServiceWorker.js` },
-  })
+  }
+  await worker.start(options)
+  keepMocksAlive(worker, options)
 }
